@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Reset from "./reset"; // adjust the path if needed
+
 import {
   HiCheckCircle,
   HiClock,
@@ -12,7 +14,6 @@ import {
   HiFire,
 } from "react-icons/hi";
 
-// Define types
 interface Task {
   id: number;
   title: string;
@@ -28,50 +29,83 @@ interface Week {
 }
 
 export default function Dashboard() {
-  // State for tasks
+  const resetAllData = () => {
+    // Reset tasks
+    setTasks(defaultTasks);
 
-  const [tasks, setTasks] = useState<Task[]>([
+    // Reset weeks
+    setWeeks(initialWeeks);
+
+    // Reset stats
+    setStats({ timePracticed: 0, questionsAnswered: 0 });
+
+    // Reset streak
+    setStreak(0);
+
+    // Clear last streak and last reset dates
+    setLastStreakDate(null);
+    setLastTaskResetDate(null);
+
+    // Clear localStorage
+    localStorage.removeItem("dashboard-tasks");
+    localStorage.removeItem("dashboard-weeks");
+    localStorage.removeItem("dashboard-stats");
+    localStorage.removeItem("dashboard-streak");
+    localStorage.removeItem("dashboard-lastStreakDate");
+    localStorage.removeItem("dashboard-lastTaskResetDate");
+  };
+
+  const defaultTasks: Task[] = [
     {
       id: 1,
-      title: "Practice Q&A Session",
+      title: "Practice Q&A Session + Answer 3 Questions",
       completed: false,
       timeEstimate: 30,
     },
-    { id: 2, title: "Breathing Exercises", completed: false, timeEstimate: 10 },
-    { id: 3, title: "Speech Drills", completed: false, timeEstimate: 15 },
+    {
+      id: 2,
+      title: "Breathing Exercises + Answer 3 Questions",
+      completed: false,
+      timeEstimate: 10,
+    },
+    {
+      id: 3,
+      title: "Speech Drills + Answer 3 Questions",
+      completed: false,
+      timeEstimate: 15,
+    },
     {
       id: 4,
-      title: "Review Advocacy Plan",
+      title: "Review Advocacy Plan + Answer 3 Questions",
       completed: false,
       timeEstimate: 20,
     },
     {
       id: 5,
-      title: "Watch Expert Q&A Videos",
+      title: "Watch Expert Q&A Videos + Answer 3 Questions",
       completed: false,
       timeEstimate: 25,
     },
-  ]);
+  ];
 
-  // State for weeks
-  const [weeks, setWeeks] = useState<Week[]>([
+  const initialWeeks: Week[] = [
     {
       number: 1,
       title: "Foundation Building",
-      completed: true,
-      current: false,
+      completed: false,
+      current: true,
     },
     {
       number: 2,
       title: "Core Skills Development",
-      completed: true,
+      completed: false,
       current: false,
     },
     {
       number: 3,
       title: "Advanced Techniques",
       completed: false,
-      current: true,
+      current: false,
     },
     {
       number: 4,
@@ -86,55 +120,122 @@ export default function Dashboard() {
       current: false,
     },
     { number: 6, title: "Final Preparation", completed: false, current: false },
-  ]);
+  ];
 
-  // Statistics state
+  const [tasks, setTasks] = useState<Task[]>(defaultTasks);
+  const [weeks, setWeeks] = useState<Week[]>(initialWeeks);
   const [stats, setStats] = useState({
     timePracticed: 0,
     questionsAnswered: 0,
   });
+  const [streak, setStreak] = useState<number>(0);
+  const [lastStreakDate, setLastStreakDate] = useState<string | null>(null);
+  const [lastTaskResetDate, setLastTaskResetDate] = useState<string | null>(
+    null
+  );
 
-  // Toggle task completion
+  const getCurrentDateGMT8 = () => {
+    const date = new Date();
+    const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+    const gmt8 = new Date(utc + 8 * 60 * 60 * 1000);
+    return gmt8.toISOString().split("T")[0];
+  };
+
+  const resetDailyTasks = () => {
+    setTasks((prev) => prev.map((t) => ({ ...t, completed: false })));
+    const today = getCurrentDateGMT8();
+    setLastTaskResetDate(today);
+    localStorage.setItem("dashboard-lastTaskResetDate", today);
+  };
+
   const toggleTask = (id: number) => {
     const updatedTasks = tasks.map((task) =>
       task.id === id ? { ...task, completed: !task.completed } : task
     );
     setTasks(updatedTasks);
 
-    // Update stats when task is completed
     const task = tasks.find((t) => t.id === id);
     if (task && !task.completed) {
       setStats((prev) => ({
         timePracticed: prev.timePracticed + task.timeEstimate,
-        questionsAnswered: prev.questionsAnswered + 5, // Assuming 5 questions per task
+        questionsAnswered: prev.questionsAnswered + 3,
       }));
+    }
+
+    const allCompleted = updatedTasks.every((t) => t.completed);
+    const today = getCurrentDateGMT8();
+
+    if (allCompleted && lastStreakDate !== today) {
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      setLastStreakDate(today);
+
+      if (newStreak >= 7) {
+        setStreak(0);
+
+        const currentWeekIndex = weeks.findIndex((w) => w.current);
+        if (currentWeekIndex !== -1) {
+          const updatedWeeks = [...weeks];
+          updatedWeeks[currentWeekIndex].completed = true;
+          updatedWeeks[currentWeekIndex].current = false;
+          if (currentWeekIndex + 1 < updatedWeeks.length) {
+            updatedWeeks[currentWeekIndex + 1].current = true;
+          }
+          setWeeks(updatedWeeks);
+        }
+
+        resetDailyTasks();
+      }
     }
   };
 
-  // Calculate progress
   const progress = Math.round(
     (weeks.filter((w) => w.completed).length / weeks.length) * 100
   );
   const tasksCompleted = tasks.filter((t) => t.completed).length;
   const totalTasks = tasks.length;
 
-  // Load data from localStorage on component mount
   useEffect(() => {
     const savedTasks = localStorage.getItem("dashboard-tasks");
     const savedWeeks = localStorage.getItem("dashboard-weeks");
     const savedStats = localStorage.getItem("dashboard-stats");
+    const savedStreak = localStorage.getItem("dashboard-streak");
+    const savedLastDate = localStorage.getItem("dashboard-lastStreakDate");
+    const savedLastTaskResetDate = localStorage.getItem(
+      "dashboard-lastTaskResetDate"
+    );
 
     if (savedTasks) setTasks(JSON.parse(savedTasks));
-    if (savedWeeks) setWeeks(JSON.parse(savedWeeks));
+    if (savedWeeks) {
+      const weeksData: Week[] = JSON.parse(savedWeeks);
+
+      // Force Week 1 as current on first load
+      const updatedWeeks = weeksData.map((w) => ({
+        ...w,
+        current: w.number === 1,
+        completed: false, // optional: reset completed
+      }));
+
+      setWeeks(updatedWeeks);
+    }
+
     if (savedStats) setStats(JSON.parse(savedStats));
+    if (savedStreak) setStreak(Number(savedStreak));
+    if (savedLastDate) setLastStreakDate(savedLastDate);
+    if (savedLastTaskResetDate) setLastTaskResetDate(savedLastTaskResetDate);
+
+    const today = getCurrentDateGMT8();
+    if (savedLastTaskResetDate !== today) resetDailyTasks();
   }, []);
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("dashboard-tasks", JSON.stringify(tasks));
     localStorage.setItem("dashboard-weeks", JSON.stringify(weeks));
     localStorage.setItem("dashboard-stats", JSON.stringify(stats));
-  }, [tasks, weeks, stats]);
+    localStorage.setItem("dashboard-streak", String(streak));
+    if (lastStreakDate)
+      localStorage.setItem("dashboard-lastStreakDate", lastStreakDate);
+  }, [tasks, weeks, stats, streak, lastStreakDate]);
 
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-white to-green-50 p-6">
@@ -150,13 +251,19 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Streak */}
+        <div className="flex justify-end mb-4">
+          <div className="bg-green-100 text-green-700 px-4 py-2 rounded-full flex items-center space-x-2">
+            <HiFire className="text-green-600" />
+            <span>Streak: {streak} / 7</span>
+          </div>
+        </div>
+
         {/* Progress Section */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-green-100">
           <h2 className="text-xl font-semibold text-green-800 mb-4">
             Program Progress
           </h2>
-
-          {/* Progress Bar */}
           <div className="mb-6">
             <div className="flex justify-between mb-2">
               <span className="text-green-700 font-medium">
@@ -170,11 +277,10 @@ export default function Dashboard() {
               <div
                 className="bg-green-500 h-4 rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }}
-              ></div>
+              />
             </div>
           </div>
 
-          {/* Weekly Overview */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {weeks.map((week) => (
               <div
@@ -204,7 +310,7 @@ export default function Dashboard() {
           {/* Daily Tasks */}
           <div className="bg-white rounded-2xl shadow-sm p-6 border border-green-100">
             <h2 className="text-xl font-semibold text-green-800 mb-4">
-              Today&apos;s Tasks
+              Today's Tasks
             </h2>
             <p className="text-gray-600 mb-6">
               Complete your daily training to stay on track
@@ -258,7 +364,7 @@ export default function Dashboard() {
                   <div
                     className="bg-green-500 h-2 rounded-full"
                     style={{ width: `${(tasksCompleted / totalTasks) * 100}%` }}
-                  ></div>
+                  />
                 </div>
               </div>
             </div>
@@ -266,12 +372,10 @@ export default function Dashboard() {
 
           {/* Statistics and Quick Actions */}
           <div>
-            {/* Statistics */}
             <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-green-100">
               <h2 className="text-xl font-semibold text-green-800 mb-4">
                 Your Statistics
               </h2>
-
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-green-50 p-4 rounded-xl text-center">
                   <div className="text-3xl font-bold text-green-700 mb-1">
@@ -281,7 +385,6 @@ export default function Dashboard() {
                     Minutes Practiced
                   </div>
                 </div>
-
                 <div className="bg-green-50 p-4 rounded-xl text-center">
                   <div className="text-3xl font-bold text-green-700 mb-1">
                     {stats.questionsAnswered}
@@ -293,12 +396,10 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div className="bg-white rounded-2xl shadow-sm p-6 border border-green-100">
               <h2 className="text-xl font-semibold text-green-800 mb-4">
                 Quick Actions
               </h2>
-
               <div className="space-y-3">
                 <Link
                   href="/practice"
@@ -314,7 +415,6 @@ export default function Dashboard() {
                   </div>
                   <HiArrowRight className="text-green-500" />
                 </Link>
-
                 <Link
                   href="/advocacy"
                   className="flex items-center justify-between p-4 rounded-xl bg-green-50 border border-green-200 hover:bg-green-100 transition-all"
@@ -329,7 +429,6 @@ export default function Dashboard() {
                   </div>
                   <HiArrowRight className="text-green-500" />
                 </Link>
-
                 <Link
                   href="/mock"
                   className="flex items-center justify-between p-4 rounded-xl bg-green-50 border border-green-200 hover:bg-green-100 transition-all"
@@ -344,6 +443,25 @@ export default function Dashboard() {
                   </div>
                   <HiArrowRight className="text-green-500" />
                 </Link>
+                <div className="flex justify-between items-center mb-1">
+                  <div className="flex items-center space-x-2">
+                    {/* Reset Button */}
+                    <div
+                      className="flex items-center justify-between p-4 rounded-xl bg-green-50 border border-green-200 hover:bg-green-100 transition-all cursor-pointer mt-2"
+                      onClick={resetAllData}
+                    >
+                      <div className="flex items-center">
+                        <div className="bg-red-500 p-2 rounded-lg mr-4">
+                          <HiFire className="text-white text-xl" />
+                        </div>
+                        <span className="font-medium text-red-800">
+                          Reset Data
+                        </span>
+                      </div>
+                      <HiArrowRight className="text-red-500" />
+                    </div>{" "}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
