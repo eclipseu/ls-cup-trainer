@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import {
-  HiAcademicCap,
-  HiStar,
-  HiSparkles,
-  HiLightningBolt,
-} from "react-icons/hi";
-import { HiTrophy } from "react-icons/hi2"; // ✅ use hi2 for Heroicons v2
+import { HiAcademicCap, HiStar, HiSparkles } from "react-icons/hi";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);

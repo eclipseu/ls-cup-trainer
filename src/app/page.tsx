@@ -221,7 +221,7 @@ export default function HomePage() {
               }`}
             >
               <blockquote className="text-2xl italic font-light leading-relaxed">
-                "{lasallianReminders[currentReminder]}"
+                &quot;{lasallianReminders[currentReminder]}&quot;
               </blockquote>
             </div>
 
