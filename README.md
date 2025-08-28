@@ -4,6 +4,8 @@
 
 ---
 
+## Features
+
 ### Dashboard
 Track your 6-week plan progress and daily study tasks with intuitive visualizations.
 
