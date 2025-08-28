@@ -324,7 +324,7 @@ export default function Dashboard() {
           {/* Daily Tasks */}
           <div className="bg-white rounded-2xl shadow-sm p-6 border border-green-100">
             <h2 className="text-xl font-semibold text-green-800 mb-4">
-              Today's Tasks
+              Today&apos;s Tasks
             </h2>
             <p className="text-gray-600 mb-6">
               Complete your daily training to stay on track
