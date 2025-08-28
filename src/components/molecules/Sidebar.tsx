@@ -62,7 +62,7 @@ export default function Sidebar() {
           <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center">
             <HiAcademicCap className="text-white text-xl" />
           </div>
-          <h1 className="text-xl font-bold text-green-800">LS Cup Practice</h1>
+          <h1 className="text-xl font-bold text-green-800">LS Cup Trainer</h1>
         </div>
 
         {/* Profile Section */}

@@ -155,12 +155,27 @@ export default function Dashboard() {
     setTasks(updatedTasks);
 
     const task = tasks.find((t) => t.id === id);
-    if (task && !task.completed) {
-      setStats((prev) => ({
-        timePracticed: prev.timePracticed + task.timeEstimate,
-        questionsAnswered: prev.questionsAnswered + 3,
-      }));
-    }
+    if (!task) return;
+
+    setStats((prev) => {
+      let newTime = prev.timePracticed;
+      let newQuestions = prev.questionsAnswered;
+
+      if (!task.completed) {
+        // Task is now completed → add stats (no max cap anymore)
+        newTime = prev.timePracticed + task.timeEstimate;
+        newQuestions = prev.questionsAnswered + 3;
+      } else {
+        // Task is now uncompleted → subtract stats (keep floor at 0)
+        newTime = Math.max(prev.timePracticed - task.timeEstimate, 0);
+        newQuestions = Math.max(prev.questionsAnswered - 3, 0);
+      }
+
+      return {
+        timePracticed: newTime,
+        questionsAnswered: newQuestions,
+      };
+    });
 
     const allCompleted = updatedTasks.every((t) => t.completed);
     const today = getCurrentDateGMT8();
@@ -175,20 +190,19 @@ export default function Dashboard() {
 
         const currentWeekIndex = weeks.findIndex((w) => w.current);
         if (currentWeekIndex !== -1) {
-          const updatedWeeks = [...weeks];
-          updatedWeeks[currentWeekIndex].completed = true;
-          updatedWeeks[currentWeekIndex].current = false;
-          if (currentWeekIndex + 1 < updatedWeeks.length) {
-            updatedWeeks[currentWeekIndex + 1].current = true;
+          const updatedWeeksCopy = [...weeks];
+          updatedWeeksCopy[currentWeekIndex].completed = true;
+          updatedWeeksCopy[currentWeekIndex].current = false;
+          if (currentWeekIndex + 1 < updatedWeeksCopy.length) {
+            updatedWeeksCopy[currentWeekIndex + 1].current = true;
           }
-          setWeeks(updatedWeeks);
+          setWeeks(updatedWeeksCopy);
         }
 
         resetDailyTasks();
       }
     }
   };
-
   const progress = Math.round(
     (weeks.filter((w) => w.completed).length / weeks.length) * 100
   );
