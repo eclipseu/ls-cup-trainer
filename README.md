@@ -4,20 +4,23 @@
 
 ---
 
-## Features
+### Dashboard
+Track your 6-week plan progress and daily study tasks with intuitive visualizations.
 
-### User-Facing Features
-- **Flashcard Practice** – Learn and review concepts efficiently.  
-- **Drill Sessions** – Interactive drills for LS CUP preparation.  
-- **Mock Sessions** – Simulate competitions with participant, host, and judge views.  
-- **Practice Timer & Progress Tracking** – Stay on schedule and monitor improvement.  
-- **Advocacy Planner** – Plan and organize advocacy tasks.  
-- **CSV Export** – Export practice data for analysis.  
+### Practice Q&A
+Flashcards and guided formula: **Acknowledge → Idea → Connect → Impact**.
 
-### Admin Features
-- **Admin Dashboard** – Overview of users, sessions, and training progress.  
-- **Content Management** – Upload, preview, and edit flashcards.  
+### Advocacy Planning
+Plan your advocacy with goals, KPIs, and timelines for maximum impact.
 
+### Drills
+Daily speaking, breathing, and stage presence practice routines.
+
+### Mock Sessions
+Simulate live Q&A with a timer and judge scoring rubric for realistic practice.
+
+### Admin Tools
+Import content (Q&A banks, reviewers) and manage your data efficiently.
 ---
 
 ## Tech Stack
