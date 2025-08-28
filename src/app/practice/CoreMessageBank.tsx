@@ -142,7 +142,7 @@ export default function CoreMessageBank({ userName }: CoreMessageBankProps) {
             </h3>
           </div>
           <p className="text-emerald-700 mb-3">
-            You've selected Variation {selectedMessage + 1} to memorize.
+            You&apos;ve selected Variation {selectedMessage + 1} to memorize.
             Practice reciting it until it feels natural.
           </p>
           <div className="bg-white p-3 rounded border border-emerald-100">

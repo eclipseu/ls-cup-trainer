@@ -472,7 +472,7 @@ export default function PracticePage() {
                       Main Idea
                     </p>
                     <p className="text-xs text-emerald-600">
-                      'It’s about solving problems...
+                      'It&apos;s about solving problems...
                     </p>
                   </div>
                   <div className="bg-emerald-100 p-3 rounded-lg">
