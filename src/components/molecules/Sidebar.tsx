@@ -71,8 +71,7 @@ export default function Sidebar() {
             <HiUser size={20} />
           </div>
           <div>
-            <p className="font-semibold text-gray-800">John Doe</p>
-            <p className="text-sm text-green-600">Premium Account</p>
+            <p className="font-semibold text-gray-800">Jay Oconer</p>
           </div>
         </div>
 
