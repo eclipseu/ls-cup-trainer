@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Git Repository Description (Short)
 
-## Getting Started
+LS CUP Trainer Web App – A Next.js web application for Lasallian students to train, track, and improve performance for LS CUP competitions. Features interactive drills, flashcards, mock sessions, and admin management.
 
-First, run the development server:
+README.md
+LS CUP Trainer Web App
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+LS CUP Trainer Web App is a modern web application built with Next.js, TypeScript, and Tailwind CSS. It helps Lasallian students prepare for LS CUP competitions through interactive training modules, flashcard practice, mock sessions, drills, and performance tracking. Admins can manage content and monitor user progress via dedicated interfaces.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Features
+User-Facing Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Flashcard Practice – Learn and review concepts efficiently.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Drill Sessions – Interactive drills for LS CUP preparation.
 
-## Learn More
+Mock Sessions – Simulate competitions with participant, host, and judge views.
 
-To learn more about Next.js, take a look at the following resources:
+Practice Timer & Progress Tracking – Stay on schedule and monitor improvement.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Advocacy Planner – Plan and organize advocacy tasks.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+CSV Export – Export practice data for analysis.
 
-## Deploy on Vercel
+Admin Features
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Admin Dashboard – Overview of users, sessions, and training progress.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Content Management – Upload, preview, and edit flashcards.
+
+Tech Stack
+
+Frontend: Next.js, TypeScript, Tailwind CSS
+
+Backend: Supabase (Database, Auth, Storage)
+
+State Management: React Hooks & Context API
+
+Deployment: Vercel
