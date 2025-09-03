@@ -2,9 +2,9 @@
 
 import { HiAcademicCap, HiFire } from "react-icons/hi";
 import { useDashboardState } from "../../hooks/useDashboardState";
-import ProgressSection from "../../components/ProgressSection";
-import DailyTasks from "../../components/DailyTasks";
-import StatsAndActions from "../../components/StatsAndActions";
+import ProgressSection from "../dashboard/components/ProgressSection";
+import DailyTasks from "../dashboard/components/DailyTasks";
+import StatsAndActions from "../dashboard/components/StatsAndActions";
 
 export default function Dashboard() {
   const { tasks, weeks, stats, streak, toggleTask, resetAllData } =

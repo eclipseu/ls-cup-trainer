@@ -71,7 +71,7 @@ export default function PracticePage() {
       <div className="max-w-5xl mx-auto">
         <header className="text-center mb-12">
           <h1 className="pt-20 text-4xl font-bold text-red-800 mb-4">
-            Interview Practice
+            Q&A Practice
           </h1>
           <p className="text-lg text-red-600 max-w-2xl mx-auto">
             Hone your Q&A skills with our structured response practice.
