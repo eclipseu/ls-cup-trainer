@@ -99,18 +99,18 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-white to-red-50">
       {/* Header/Navigation */}
 
       {/* Hero Section */}
       <section className="flex flex-col items-center justify-center text-center py-16 px-4 max-w-4xl mx-auto">
-        <div className="mb-6 inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
-          <HiLightBulb className="text-green-600" />
+        <div className="mb-6 inline-flex items-center gap-2 bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium">
+          <HiLightBulb className="text-red-600" />
           Your all-in-one preparation companion
         </div>
 
-        <h1 className="text-5xl font-bold text-green-800 mb-6 leading-tight">
-          Master Your <span className="text-green-500">Advocacy</span> with
+        <h1 className="text-5xl font-bold text-red-800 mb-6 leading-tight">
+          Master Your <span className="text-red-500">Advocacy</span> with
           Confidence
         </h1>
 
@@ -149,11 +149,11 @@ export default function HomePage() {
         {/* Stats */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-2 gap-8 w-full max-w-3xl">
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">100+</div>
+            <div className="text-3xl font-bold text-red-600">100+</div>
             <div className="text-gray-600">Practice Questions</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">6</div>
+            <div className="text-3xl font-bold text-red-600">6</div>
             <div className="text-gray-600">Week Program</div>
           </div>
         </div>
@@ -162,38 +162,38 @@ export default function HomePage() {
       {/* Features Section */}
       <section className="py-16 bg-white px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-center text-green-800 mb-4">
+          <h2 className="text-3xl font-bold text-center text-red-800 mb-4">
             Everything You Need to Succeed
           </h2>
 
           <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             <FeatureCard
-              icon={<HiChartBar className="text-3xl text-green-500" />}
+              icon={<HiChartBar className="text-3xl text-red-500" />}
               title="Dashboard"
               description="Track your 6-week plan progress and daily study tasks with intuitive visualizations."
             />
             <FeatureCard
-              icon={<HiAcademicCap className="text-3xl text-green-500" />}
+              icon={<HiAcademicCap className="text-3xl text-red-500" />}
               title="Practice Q&A"
               description="Flashcards and guided formula: Acknowledge → Idea → Connect → Impact."
             />
             <FeatureCard
-              icon={<HiBookOpen className="text-3xl text-green-500" />}
+              icon={<HiBookOpen className="text-3xl text-red-500" />}
               title="Advocacy Planning"
               description="Plan your advocacy with goals, KPIs, and timelines for maximum impact."
             />
             <FeatureCard
-              icon={<HiFire className="text-3xl text-green-500" />}
+              icon={<HiFire className="text-3xl text-red-500" />}
               title="Drills"
               description="Daily speaking, breathing, and stage presence practice routines."
             />
             <FeatureCard
-              icon={<HiMicrophone className="text-3xl text-green-500" />}
+              icon={<HiMicrophone className="text-3xl text-red-500" />}
               title="Mock Sessions"
               description="Simulate live Q&A with a timer and judge scoring rubric for realistic practice."
             />
             <FeatureCard
-              icon={<HiCog className="text-3xl text-green-500" />}
+              icon={<HiCog className="text-3xl text-red-500" />}
               title="Admin Tools"
               description="Import content (Q&A banks, reviewers) and manage your data efficiently."
             />
@@ -282,11 +282,11 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="p-6 rounded-xl border border-green-100 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 group hover:border-green-300">
-      <div className="mb-4 p-2 bg-green-50 rounded-lg w-fit group-hover:bg-green-100 transition-colors">
+    <div className="p-6 rounded-xl border border-red-100 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 group hover:border-red-300">
+      <div className="mb-4 p-2 bg-red-50 rounded-lg w-fit group-hover:bg-red-100 transition-colors">
         {icon}
       </div>
-      <h3 className="text-xl font-semibold text-green-800 mb-2">{title}</h3>
+      <h3 className="text-xl font-semibold text-red-800 mb-2">{title}</h3>
       <p className="text-gray-600">{description}</p>
     </div>
   );
