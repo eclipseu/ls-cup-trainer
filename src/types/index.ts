@@ -13,7 +13,7 @@ export interface DashboardData {
   website?: string;
   practice_data?: PracticeData;
   advocacy_data?: AdvocacyContent;
-  daily_tasks?: any;
+  daily_tasks?: Task[];
 }
 
 export interface AdvocacyContent {

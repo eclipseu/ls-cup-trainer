@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Task, Week, DashboardData } from "@/types";
 import { defaultTasks, initialWeeks } from "../lib/data";
 import {
@@ -31,10 +31,11 @@ export function useDashboardState() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Debounced function to save data to Supabase
-  const debouncedSave = useCallback(
-    debounce(async (dataToSave: DashboardData) => {
-      await updateProfileData({ dashboard_data: dataToSave });
-    }, 1000),
+  const debouncedSave = useMemo(
+    () =>
+      debounce(async (dataToSave: DashboardData) => {
+        await updateProfileData({ dashboard_data: dataToSave });
+      }, 1000),
     []
   );
 

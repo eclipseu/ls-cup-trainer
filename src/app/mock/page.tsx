@@ -41,7 +41,7 @@ export default function MockSessionPage() {
 
   const currentQuestion = useMemo(
     () => sessionQuestions[currentIndex] || null,
-    [sessionQuestions, currentIndex],
+    [sessionQuestions, currentIndex]
   );
 
   const stopSession = useCallback(() => {
@@ -121,16 +121,7 @@ export default function MockSessionPage() {
     setRecordings({});
   };
 
-  const handleEvaluation = (key: ChecklistKey) => {
-    if (!currentQuestion) return;
-    setEvaluations((prev) => ({
-      ...prev,
-      [currentQuestion.id]: {
-        ...prev[currentQuestion.id],
-        [key]: !prev[currentQuestion.id]?.[key],
-      },
-    }));
-  };
+  // kept for potential future UI; toggleChecklist is used instead
 
   const startRecording = async () => {
     if (!currentQuestion) return;
@@ -157,7 +148,7 @@ export default function MockSessionPage() {
     } catch (err) {
       console.error("Error starting recording:", err);
       alert(
-        "Could not start recording. Please ensure you have given microphone permissions.",
+        "Could not start recording. Please ensure you have given microphone permissions."
       );
     }
   };
