@@ -6,7 +6,7 @@ export default function AuthError() {
           Authentication Error
         </h1>
         <p className="text-gray-700">
-          Sorry, we couldn't sign you in. Please try again.
+          Sorry, we could not sign you in. Please try again.
         </p>
         <p className="text-gray-500 mt-2">
           If the problem persists, please contact support.

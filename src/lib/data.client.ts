@@ -2,7 +2,37 @@
 
 import { createClient } from "@/utils/supabase/client";
 
-export async function getProfileDataClient() {
+export interface DashboardData {
+  tasks?: unknown;
+  weeks?: unknown;
+  stats?: { timePracticed: number; questionsAnswered: number };
+  streak?: number;
+  lastStreakDate?: string | null;
+  lastTaskResetDate?: string | null;
+}
+
+export type AdvocacyData = Record<string, unknown>;
+
+export interface CustomQuestion {
+  id: number;
+  text: string;
+  category: string;
+  sampleAnswer: string;
+}
+
+export interface PracticeData {
+  coreMessages?: Array<{ id: number; text: string }>;
+  customQuestions?: CustomQuestion[];
+}
+
+export async function getProfileDataClient(): Promise<
+  | {
+      id: string;
+      dashboard_data?: DashboardData;
+      advocacy_data?: AdvocacyData;
+      practice_data?: PracticeData;
+    } | null
+> {
   const supabase = createClient();
   const {
     data: { user },
@@ -23,21 +53,21 @@ export async function getProfileDataClient() {
     return null;
   }
 
-  return profile;
+  return profile as any;
 }
 
 export async function updateProfileDataClient(data: {
-  dashboard_data?: any;
-  advocacy_data?: any;
-  practice_data?: any;
-}) {
+  dashboard_data?: DashboardData;
+  advocacy_data?: AdvocacyData;
+  practice_data?: PracticeData;
+}): Promise<{ data?: unknown; error?: string }> {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "User not authenticated" };
+    return { error: "User not authenticated" } as const;
   }
 
   const { data: updatedProfile, error } = await supabase
@@ -56,7 +86,10 @@ export async function updateProfileDataClient(data: {
 
 // Practice data stored in a dedicated table: practice_data
 // Assumes table schema roughly: id (uuid, PK, references profiles.id), coreMessages jsonb, customQuestions jsonb
-export async function getPracticeDataClient() {
+export async function getPracticeDataClient(): Promise<{
+  coreMessages?: PracticeData["coreMessages"];
+  customQuestions?: PracticeData["customQuestions"];
+} | null> {
   const supabase = createClient();
   const {
     data: { user },
@@ -72,18 +105,17 @@ export async function getPracticeDataClient() {
 
   if (error) {
     // If no row yet, return empty structure
-    if (error.code === "PGRST116" /* No rows */) return null;
+    if ((error as any).code === "PGRST116" /* No rows */) return null;
     console.error("Error fetching practice_data (client):", error);
     return null;
   }
 
-  return data as { coreMessages?: any; customQuestions?: any } | null;
+  return data as any;
 }
 
-export async function upsertPracticeDataClient(data: {
-  coreMessages?: any;
-  customQuestions?: any;
-}) {
+export async function upsertPracticeDataClient(
+  data: PracticeData
+): Promise<{ data?: unknown; error?: string }> {
   const supabase = createClient();
   const {
     data: { user },
@@ -106,7 +138,9 @@ export async function upsertPracticeDataClient(data: {
 }
 
 // mock_data helpers
-export async function getMockDataClient() {
+export async function getMockDataClient(): Promise<{
+  mockQuestions?: CustomQuestion[];
+} | null> {
   const supabase = createClient();
   const {
     data: { user },
@@ -120,14 +154,16 @@ export async function getMockDataClient() {
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") return null;
+    if ((error as any).code === "PGRST116") return null;
     console.error("Error fetching mock_data (client):", error);
     return null;
   }
-  return data as { mockQuestions?: any } | null;
+  return data as any;
 }
 
-export async function upsertMockDataClient(data: { mockQuestions?: any }) {
+export async function upsertMockDataClient(data: {
+  mockQuestions?: CustomQuestion[];
+}): Promise<{ data?: unknown; error?: string }> {
   const supabase = createClient();
   const {
     data: { user },

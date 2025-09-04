@@ -51,10 +51,11 @@ export function useAdvocacyState() {
 
   const debouncedUpdate = useCallback(
     debounce(async (newContent: AdvocacyContent) => {
-      const { error } = await updateProfileData({ advocacy_data: newContent });
+      const { error } = await updateProfileData({
+        advocacy_data: newContent as any,
+      });
       if (error) {
         console.error("Failed to save advocacy data:", error);
-        // Optionally, handle the error in the UI
       }
     }, 1000),
     []
@@ -66,13 +67,14 @@ export function useAdvocacyState() {
         setIsLoading(true);
         const profile = await getProfileData();
         if (profile && profile.advocacy_data) {
-          setContent(profile.advocacy_data);
+          setContent(profile.advocacy_data as unknown as AdvocacyContent);
         } else {
           setContent(defaultAdvocacyContent);
         }
-      } catch (err: any) {
-        setError(err.message);
-        console.error("Failed to load advocacy data:", err);
+      } catch (err) {
+        const e = err as Error;
+        setError(e.message);
+        console.error("Failed to load advocacy data:", e);
         setContent(defaultAdvocacyContent);
       } finally {
         setIsLoading(false);
