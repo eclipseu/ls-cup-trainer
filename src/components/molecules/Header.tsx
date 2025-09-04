@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { HiChip, HiCog, HiServer, HiSparkles, HiLogout } from "react-icons/hi";
+import { HiChip, HiSparkles } from "react-icons/hi";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [showCircuit, setShowCircuit] = useState(false);
-  const [user, setUser] = useState(null); // Replace with actual user state
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -35,9 +34,7 @@ export default function Header() {
     };
   }, []);
 
-  const logout = () => {
-    setUser(null);
-  };
+  // placeholder
 
   if (loading) return null; // Optionally, add a loading state
 

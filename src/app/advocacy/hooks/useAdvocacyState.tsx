@@ -1,28 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   getProfileDataClient as getProfileData,
   updateProfileDataClient as updateProfileData,
 } from "@/lib/data.client";
+import { AdvocacyContent } from "@/types";
 import debounce from "lodash/debounce";
-
-// Define the structure for the advocacy plan content
-interface AdvocacyContent {
-  title: string;
-  advocateName: string;
-  date: string;
-  abstract: string;
-  introduction: string;
-  problemStatement: string;
-  generalObjective: string;
-  specificObjectives: string;
-  significance: string;
-  methodology: string;
-  expectedOutcomes: string;
-  conclusion: string;
-  references: string;
-}
 
 const defaultAdvocacyContent: AdvocacyContent = {
   title: "Your Advocacy Title",
@@ -49,15 +33,16 @@ export function useAdvocacyState() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const debouncedUpdate = useCallback(
-    debounce(async (newContent: AdvocacyContent) => {
-      const { error } = await updateProfileData({
-        advocacy_data: newContent as any,
-      });
-      if (error) {
-        console.error("Failed to save advocacy data:", error);
-      }
-    }, 1000),
+  const debouncedUpdate = useMemo(
+    () =>
+      debounce(async (newContent: AdvocacyContent) => {
+        const { error } = await updateProfileData({
+          advocacy_data: newContent,
+        });
+        if (error) {
+          console.error("Failed to save advocacy data:", error);
+        }
+      }, 1000),
     []
   );
 
@@ -71,10 +56,13 @@ export function useAdvocacyState() {
         } else {
           setContent(defaultAdvocacyContent);
         }
-      } catch (err) {
-        const e = err as Error;
-        setError(e.message);
-        console.error("Failed to load advocacy data:", e);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred while loading advocacy data.");
+        }
+        console.error("Failed to load advocacy data:", err);
         setContent(defaultAdvocacyContent);
       } finally {
         setIsLoading(false);

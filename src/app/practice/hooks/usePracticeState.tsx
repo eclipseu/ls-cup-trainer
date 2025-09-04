@@ -9,16 +9,8 @@ import {
   getPracticeDataClient as getPracticeData,
   upsertPracticeDataClient as upsertPracticeData,
 } from "@/lib/data.client";
+import { PracticeState, Question, PracticeData } from "@/types";
 import debounce from "lodash/debounce";
-import { Question } from "../questionsData";
-
-interface PracticeState {
-  selectedCategory: string | null;
-  selectedQuestion: Question | null;
-  userAnswer: string;
-  coreMessages: { id: number; text: string }[];
-  customQuestions: Question[];
-}
 
 const defaultPracticeState: PracticeState = {
   selectedCategory: null,
@@ -39,67 +31,87 @@ export function usePracticeState() {
   const hasUserInteractedRef = useRef(false);
 
   const debouncedUpdate = useCallback(
-    debounce(async (newState: PracticeState) => {
+    debounce(async (dataToSave: PracticeData) => {
       // Save to dedicated practice_data table
-      const { error } = await upsertPracticeData({
-        coreMessages: newState.coreMessages,
-        customQuestions: newState.customQuestions,
-      });
+      const { error } = await upsertPracticeData(dataToSave);
       if (error) {
         console.error(
           "Failed to save practice_data; falling back to profiles.practice_data:",
           error
         );
         await updateProfileData({
-          practice_data: {
-            coreMessages: newState.coreMessages,
-            customQuestions: newState.customQuestions,
-          },
+          practice_data: dataToSave,
         });
       }
     }, 1000),
     []
   );
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setIsLoading(true);
-        // 1) Load from localStorage first for instant UI
-        if (typeof window !== "undefined") {
-          const local = window.localStorage.getItem("practice-state");
-          if (local) {
-            try {
-              setState(JSON.parse(local));
-            } catch (_) {
-              setState(defaultPracticeState);
-            }
-          } else {
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      // 1) Load from localStorage first for instant UI
+      if (typeof window !== "undefined") {
+        const local = window.localStorage.getItem("practice-state");
+        if (local) {
+          try {
+            setState(JSON.parse(local));
+          } catch (_) {
             setState(defaultPracticeState);
           }
         } else {
           setState(defaultPracticeState);
         }
+      } else {
+        setState(defaultPracticeState);
+      }
 
-        // 2) Load from dedicated practice_data table and override local if present
-        const practice = await getPracticeData();
-        if (practice) {
+      // 2) Load from dedicated practice_data table and override local if present
+      const practice = await getPracticeData();
+      if (practice) {
+        setState((current) => {
+          const serverCoreMessages = Array.isArray(practice?.coreMessages)
+            ? practice.coreMessages
+            : current.coreMessages;
+          const serverCustomQuestions = Array.isArray(practice?.customQuestions)
+            ? practice.customQuestions
+            : current.customQuestions;
+
+          const merged = {
+            ...current,
+            coreMessages: serverCoreMessages,
+            customQuestions: serverCustomQuestions,
+          };
+
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem(
+              "practice-state",
+              JSON.stringify(merged)
+            );
+          }
+          return merged;
+        });
+      } else {
+        // Fallback: try reading from profiles.practice_data and mirror into practice_data
+        const profile = await getProfileData();
+        if (profile && profile.practice_data) {
+          const serverCoreMessages = Array.isArray(
+            profile.practice_data?.coreMessages
+          )
+            ? profile.practice_data.coreMessages
+            : defaultPracticeState.coreMessages;
+          const serverCustomQuestions = Array.isArray(
+            profile.practice_data?.customQuestions
+          )
+            ? profile.practice_data.customQuestions
+            : [];
+
           setState((current) => {
-            const serverCoreMessages = Array.isArray(practice?.coreMessages)
-              ? practice.coreMessages
-              : current.coreMessages;
-            const serverCustomQuestions = Array.isArray(
-              practice?.customQuestions
-            )
-              ? practice.customQuestions
-              : current.customQuestions;
-
             const merged = {
               ...current,
               coreMessages: serverCoreMessages,
               customQuestions: serverCustomQuestions,
             };
-
             if (typeof window !== "undefined") {
               window.localStorage.setItem(
                 "practice-state",
@@ -108,59 +120,36 @@ export function usePracticeState() {
             }
             return merged;
           });
+
+          // Mirror into practice_data table for future
+          await upsertPracticeData({
+            coreMessages: serverCoreMessages,
+            customQuestions: serverCustomQuestions,
+          });
         } else {
-          // Fallback: try reading from profiles.practice_data and mirror into practice_data
-          const profile = await getProfileData();
-          if (profile && profile.practice_data) {
-            const serverCoreMessages = Array.isArray(
-              profile.practice_data?.coreMessages
-            )
-              ? profile.practice_data.coreMessages
-              : defaultPracticeState.coreMessages;
-            const serverCustomQuestions = Array.isArray(
-              profile.practice_data?.customQuestions
-            )
-              ? profile.practice_data.customQuestions
-              : [];
-
-            setState((current) => {
-              const merged = {
-                ...current,
-                coreMessages: serverCoreMessages,
-                customQuestions: serverCustomQuestions,
-              };
-              if (typeof window !== "undefined") {
-                window.localStorage.setItem(
-                  "practice-state",
-                  JSON.stringify(merged)
-                );
-              }
-              return merged;
-            });
-
-            // Mirror into practice_data table for future
-            await upsertPracticeData({
-              coreMessages: serverCoreMessages,
-              customQuestions: serverCustomQuestions,
-            });
-          } else {
-            // Ensure row exists for new users in practice_data
-            await upsertPracticeData({
-              coreMessages: defaultPracticeState.coreMessages,
-              customQuestions: [],
-            });
-          }
+          // Ensure row exists for new users in practice_data
+          await upsertPracticeData({
+            coreMessages: defaultPracticeState.coreMessages,
+            customQuestions: [],
+          });
         }
-      } catch (err: any) {
-        setError(err.message);
-        console.error("Failed to load practice data:", err);
-        setState((prev) => prev ?? defaultPracticeState);
-      } finally {
-        setIsLoading(false);
       }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred while loading practice data.");
+      }
+      console.error("Failed to load practice data:", err);
+      setState((prev) => prev ?? defaultPracticeState);
+    } finally {
+      setIsLoading(false);
     }
-    loadData();
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const setPracticeState = (newState: Partial<PracticeState>) => {
     hasUserInteractedRef.current = true;
@@ -173,23 +162,20 @@ export function usePracticeState() {
         );
       }
       // Always schedule a debounced save
-      debouncedUpdate(updatedState);
+      const dataToSave: PracticeData = {
+        coreMessages: updatedState.coreMessages,
+        customQuestions: updatedState.customQuestions,
+      };
+      debouncedUpdate(dataToSave);
       // If customQuestions or coreMessages changed, push immediately as well
       if (
         Object.prototype.hasOwnProperty.call(newState, "customQuestions") ||
         Object.prototype.hasOwnProperty.call(newState, "coreMessages")
       ) {
-        upsertPracticeData({
-          coreMessages: updatedState.coreMessages,
-          customQuestions: updatedState.customQuestions,
-        }).then((res) => {
-          if ((res as any)?.error) {
-            // Fallback to profiles.practice_data when practice_data upsert fails
+        upsertPracticeData(dataToSave).then((res) => {
+          if (res?.error) {
             void updateProfileData({
-              practice_data: {
-                coreMessages: updatedState.coreMessages,
-                customQuestions: updatedState.customQuestions,
-              },
+              practice_data: dataToSave,
             });
           }
         });

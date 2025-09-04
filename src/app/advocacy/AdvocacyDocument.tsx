@@ -4,23 +4,6 @@ import EditableSection from "./EditableSection";
 import { HiDocumentDownload, HiPrinter, HiSave } from "react-icons/hi";
 import { useAdvocacyState } from "./hooks/useAdvocacyState";
 
-// Define the structure for the advocacy plan content
-interface AdvocacyContent {
-  title: string;
-  advocateName: string;
-  date: string;
-  abstract: string;
-  introduction: string;
-  problemStatement: string;
-  generalObjective: string;
-  specificObjectives: string;
-  significance: string;
-  methodology: string;
-  expectedOutcomes: string;
-  conclusion: string;
-  references: string;
-}
-
 export default function AdvocacyDocument() {
   const { content, isLoading, error, handleContentChange } = useAdvocacyState();
 

@@ -10,7 +10,6 @@ import {
   HiBookOpen,
   HiFire,
   HiMicrophone,
-  HiCog,
   HiUser,
   HiX,
   HiMenu,

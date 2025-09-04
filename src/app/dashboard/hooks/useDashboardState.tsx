@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Task, Week } from "../types";
+import { useState, useEffect, useCallback } from "react";
+import { Task, Week, DashboardData } from "@/types";
 import { defaultTasks, initialWeeks } from "../lib/data";
 import {
   getProfileDataClient as getProfileData,
@@ -32,15 +32,14 @@ export function useDashboardState() {
 
   // Debounced function to save data to Supabase
   const debouncedSave = useCallback(
-    debounce(async (dataToSave) => {
+    debounce(async (dataToSave: DashboardData) => {
       await updateProfileData({ dashboard_data: dataToSave });
-    }, 1000), // 1-second debounce delay
+    }, 1000),
     []
   );
 
   useEffect(() => {
-    async function loadData() {
-      // 1) Load from localStorage first
+    (async () => {
       if (typeof window !== "undefined") {
         try {
           const localTasks = window.localStorage.getItem("dashboard-tasks");
@@ -60,10 +59,9 @@ export function useDashboardState() {
           if (localStreak) setStreak(Number(localStreak));
           if (localLast) setLastStreakDate(localLast);
           if (localReset) setLastTaskResetDate(localReset);
-        } catch (_) {}
+        } catch {}
       }
 
-      // 2) Load from server and hydrate + sync localStorage
       const profile = await getProfileData();
       if (profile && profile.dashboard_data) {
         const {
@@ -104,7 +102,6 @@ export function useDashboardState() {
           }
         }
       } else if (profile) {
-        // New user, save initial data
         const initialData = {
           tasks: defaultTasks,
           weeks: initialWeeks,
@@ -117,8 +114,13 @@ export function useDashboardState() {
       }
 
       setIsLoaded(true);
-    }
-    loadData();
+    })();
+  }, []);
+
+  const resetDailyTasks = useCallback(() => {
+    setTasks((prev) => prev.map((t) => ({ ...t, completed: false })));
+    const today = getCurrentDateGMT8();
+    setLastTaskResetDate(today);
   }, []);
 
   useEffect(() => {
@@ -127,7 +129,7 @@ export function useDashboardState() {
     if (lastTaskResetDate !== today) {
       resetDailyTasks();
     }
-  }, [isLoaded, lastTaskResetDate]);
+  }, [isLoaded, lastTaskResetDate, resetDailyTasks]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -174,12 +176,6 @@ export function useDashboardState() {
     isLoaded,
     debouncedSave,
   ]);
-
-  const resetDailyTasks = () => {
-    setTasks((prev) => prev.map((t) => ({ ...t, completed: false })));
-    const today = getCurrentDateGMT8();
-    setLastTaskResetDate(today);
-  };
 
   const toggleTask = (id: number) => {
     const updatedTasks = tasks.map((task) =>

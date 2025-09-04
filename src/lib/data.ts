@@ -2,6 +2,11 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import {
+  DashboardData,
+  AdvocacyContent,
+  PracticeState,
+} from "@/types";
 
 export async function getProfileData() {
   const supabase = createClient();
@@ -28,9 +33,9 @@ export async function getProfileData() {
 }
 
 export async function updateProfileData(data: {
-  dashboard_data?: any;
-  advocacy_data?: any;
-  practice_data?: any;
+  dashboard_data?: DashboardData;
+  advocacy_data?: AdvocacyContent;
+  practice_data?: PracticeState;
 }) {
   const supabase = createClient();
   const {

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import Head from "next/head";
-import { questionsData, type Question } from "../practice/questionsData";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { questionsData } from "../practice/questionsData";
 import { getMockDataClient } from "@/lib/data.client";
 import { usePracticeState } from "../practice/hooks/usePracticeState";
+import { Question } from "@/types";
 
 type ChecklistKey = "clarity" | "structure" | "relevance" | "confidence";
 
@@ -31,7 +31,6 @@ export default function MockSessionPage() {
   const [running, setRunning] = useState<boolean>(false);
   const [evaluations, setEvaluations] = useState<Evaluation>({});
   const timerRef = useRef<number | null>(null);
-  const [mockQuestions, setMockQuestions] = useState<Question[] | null>(null);
   const { customQuestions } = usePracticeState();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -42,8 +41,35 @@ export default function MockSessionPage() {
 
   const currentQuestion = useMemo(
     () => sessionQuestions[currentIndex] || null,
-    [sessionQuestions, currentIndex]
+    [sessionQuestions, currentIndex],
   );
+
+  const stopSession = useCallback(() => {
+    setRunning(false);
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
+  }, []);
+
+  const handleNext = useCallback(() => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state === "recording"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
+
+    if (currentIndex < sessionQuestions.length - 1) {
+      setCurrentIndex((i) => i + 1);
+      setTimeLeft(ONE_MINUTE);
+    } else {
+      stopSession();
+    }
+  }, [currentIndex, sessionQuestions.length, stopSession]);
 
   useEffect(() => {
     if (!running) return;
@@ -55,70 +81,95 @@ export default function MockSessionPage() {
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
     };
-  }, [running, timeLeft]);
+  }, [running, timeLeft, handleNext]);
 
-  // Load custom mock questions from Supabase
+  // This effect is now just for potential future use, not setting state
   useEffect(() => {
     (async () => {
-      const data = await getMockDataClient();
-      if (data && Array.isArray(data.mockQuestions)) {
-        setMockQuestions(data.mockQuestions as Question[]);
-      } else {
-        setMockQuestions([]);
-      }
+      await getMockDataClient();
+      // You can use the data for logging or other purposes
     })();
   }, []);
 
+  const allQuestions = useMemo(() => {
+    const merged = new Map<number, Question>();
+    questionsData.forEach((q) => merged.set(q.id, q));
+    customQuestions.forEach((q) => merged.set(q.id, q));
+    return Array.from(merged.values());
+  }, [customQuestions]);
+
   const startSession = () => {
     const count = Math.min(Math.max(questionCount, 3), 5);
-    // Build available questions: prefer mockQuestions if present; always include user's customQuestions
-    const base =
-      mockQuestions && mockQuestions.length > 0 ? mockQuestions : questionsData;
-    const mergedMap = new Map<number, Question>();
-    base.forEach((q) => mergedMap.set(q.id, q));
-    (customQuestions || []).forEach((q) => mergedMap.set(q.id, q));
-    const available = Array.from(mergedMap.values());
-
     let qs: Question[];
+
     if (selectedIds.size > 0) {
-      const chosen = available.filter((q) => selectedIds.has(q.id));
+      const chosen = allQuestions.filter((q) => selectedIds.has(q.id));
       qs = chosen.slice(0, count);
       if (qs.length < count) {
-        const remaining = available.filter((q) => !selectedIds.has(q.id));
+        const remaining = allQuestions.filter((q) => !selectedIds.has(q.id));
         qs = [...qs, ...pickRandomQuestions(remaining, count - qs.length)];
       }
     } else {
-      qs = pickRandomQuestions(available, count);
+      qs = pickRandomQuestions(allQuestions, count);
     }
+
     setSessionQuestions(qs);
     setCurrentIndex(0);
     setTimeLeft(ONE_MINUTE);
     setRunning(true);
     setEvaluations({});
-    // keep previous recordings irrelevant for new session
     setRecordings({});
   };
 
-  const stopSession = () => {
-    setRunning(false);
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-    // ensure recording is stopped when session ends
-    if (isRecording) {
-      void stopRecording();
+  const handleEvaluation = (key: ChecklistKey) => {
+    if (!currentQuestion) return;
+    setEvaluations((prev) => ({
+      ...prev,
+      [currentQuestion.id]: {
+        ...prev[currentQuestion.id],
+        [key]: !prev[currentQuestion.id]?.[key],
+      },
+    }));
+  };
+
+  const startRecording = async () => {
+    if (!currentQuestion) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        chunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        setRecordings((prev) => ({ ...prev, [currentQuestion.id]: url }));
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      };
+
+      recorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error starting recording:", err);
+      alert(
+        "Could not start recording. Please ensure you have given microphone permissions.",
+      );
     }
   };
 
-  const handleNext = () => {
-    // auto-stop recording before moving on
-    if (isRecording) {
-      void stopRecording();
+  const stopRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
     }
-    if (currentIndex + 1 < sessionQuestions.length) {
-      setCurrentIndex((i) => i + 1);
-      setTimeLeft(ONE_MINUTE);
-    } else {
-      stopSession();
-    }
+    setIsRecording(false);
   };
 
   const toggleChecklist = (questionId: number, key: ChecklistKey) => {
@@ -151,56 +202,6 @@ export default function MockSessionPage() {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  async function startRecording() {
-    try {
-      // Request mic access
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaStreamRef.current = stream;
-      chunksRef.current = [];
-      const recorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = recorder;
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
-      };
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        const url = URL.createObjectURL(blob);
-        const q = sessionQuestions[currentIndex];
-        if (q) {
-          setRecordings((prev) => {
-            // Revoke old URL if exists
-            const existing = prev[q.id];
-            if (existing) URL.revokeObjectURL(existing);
-            return { ...prev, [q.id]: url };
-          });
-        }
-        // Cleanup stream tracks
-        mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
-        mediaStreamRef.current = null;
-        mediaRecorderRef.current = null;
-        chunksRef.current = [];
-      };
-      recorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error("Failed to start recording:", err);
-      setIsRecording(false);
-    }
-  }
-
-  async function stopRecording() {
-    try {
-      const recorder = mediaRecorderRef.current;
-      if (recorder && recorder.state !== "inactive") {
-        recorder.stop();
-      }
-    } finally {
-      setIsRecording(false);
-    }
-  }
-
   // Revoke all blob URLs on unmount
   useEffect(() => {
     return () => {
@@ -209,21 +210,17 @@ export default function MockSessionPage() {
         mediaStreamRef.current.getTracks().forEach((t) => t.stop());
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [recordings]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-red-50 py-8 px-4 sm:px-6 lg:px-8">
-      <Head>
-        <title>Mock Session | Timed Q&A</title>
-      </Head>
       <div className="max-w-4xl mx-auto">
         <header className="text-center mb-8">
           <h1 className="pt-20 text-4xl font-bold text-red-800 mb-2">
             Mock Session
           </h1>
           <p className="text-red-600">
-            Timed Q&A practice with a 1-minute limit per question
+            Timed Q&amp;A practice with a 1-minute limit per question
           </p>
         </header>
 
@@ -273,45 +270,33 @@ export default function MockSessionPage() {
                 Selected questions will be used; otherwise we pick randomly.
               </p>
               <div className="max-h-64 overflow-auto space-y-2 border border-red-100 rounded-lg p-3 bg-red-50">
-                {(() => {
-                  const base =
-                    mockQuestions && mockQuestions.length > 0
-                      ? mockQuestions
-                      : questionsData;
-                  const mergedMap = new Map<number, Question>();
-                  base.forEach((q) => mergedMap.set(q.id, q));
-                  (customQuestions || []).forEach((q) =>
-                    mergedMap.set(q.id, q)
+                {allQuestions.map((q) => {
+                  const checked = selectedIds.has(q.id);
+                  return (
+                    <label
+                      key={q.id}
+                      className="flex items-center gap-2 bg-white rounded-md p-2 border border-red-100"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setSelectedIds((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(q.id);
+                            else next.delete(q.id);
+                            return next;
+                          });
+                        }}
+                        className="accent-red-500"
+                      />
+                      <span className="text-gray-800">{q.text}</span>
+                      <span className="ml-auto text-xs text-red-700">
+                        {q.category}
+                      </span>
+                    </label>
                   );
-                  const available = Array.from(mergedMap.values());
-                  return available.map((q) => {
-                    const checked = selectedIds.has(q.id);
-                    return (
-                      <label
-                        key={q.id}
-                        className="flex items-center gap-2 bg-white rounded-md p-2 border border-red-100"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            setSelectedIds((prev) => {
-                              const next = new Set(prev);
-                              if (e.target.checked) next.add(q.id);
-                              else next.delete(q.id);
-                              return next;
-                            });
-                          }}
-                          className="accent-red-500"
-                        />
-                        <span className="text-gray-800">{q.text}</span>
-                        <span className="ml-auto text-xs text-red-700">
-                          {q.category}
-                        </span>
-                      </label>
-                    );
-                  });
-                })()}
+                })}
               </div>
             </div>
           )}
