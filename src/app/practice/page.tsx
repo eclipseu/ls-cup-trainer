@@ -6,22 +6,29 @@ import Head from "next/head";
 import CoreMessageBank from "./CoreMessageBank";
 import QuestionBank from "./QuestionBank";
 import FrameworkGuide from "./FrameworkGuide";
-import { Question, questionsData, categories } from "./questionsData";
+import { questionsData, categories } from "./questionsData";
+import { usePracticeState } from "./hooks/usePracticeState";
 
 export default function PracticePage() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
-    null
-  );
+  const {
+    selectedCategory,
+    selectedQuestion,
+    userAnswer,
+    coreMessages,
+    isLoading,
+    error,
+    setPracticeState,
+  } = usePracticeState();
+
   const [timerActive, setTimerActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
-  const [userAnswer, setUserAnswer] = useState("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const categoryQuestions = selectedCategory
-    ? questionsData.filter((q) => q.category === selectedCategory)
-    : [];
+  const categoryQuestions =
+    selectedCategory && !isLoading
+      ? questionsData.filter((q) => q.category === selectedCategory)
+      : [];
 
   useEffect(() => {
     if (timerActive && timeLeft > 0) {
@@ -47,8 +54,7 @@ export default function PracticePage() {
 
   const resetPractice = () => {
     stopTimer();
-    setSelectedQuestion(null);
-    setUserAnswer("");
+    setPracticeState({ selectedQuestion: null, userAnswer: "" });
     setShowSampleAnswer(false);
   };
 
@@ -57,6 +63,24 @@ export default function PracticePage() {
     const secs = seconds % 60;
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-2xl font-bold text-gray-500">
+          Loading Practice Session...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-red-50">
+        <div className="text-2xl font-bold text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-red-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -81,13 +105,17 @@ export default function PracticePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <QuestionBank
             categories={categories}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
+            selectedCategory={selectedCategory || null}
+            setSelectedCategory={(category) =>
+              setPracticeState({ selectedCategory: category })
+            }
             categoryQuestions={categoryQuestions}
-            selectedQuestion={selectedQuestion}
-            setSelectedQuestion={setSelectedQuestion}
+            selectedQuestion={selectedQuestion || null}
+            setSelectedQuestion={(question) =>
+              setPracticeState({ selectedQuestion: question })
+            }
             stopTimer={stopTimer}
-            setUserAnswer={setUserAnswer}
+            setUserAnswer={(answer) => setPracticeState({ userAnswer: answer })}
             setShowSampleAnswer={setShowSampleAnswer}
           />
 
@@ -155,16 +183,17 @@ export default function PracticePage() {
                     Your Answer:
                   </h3>
                   <textarea
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
+                    value={userAnswer || ""}
+                    onChange={(e) =>
+                      setPracticeState({ userAnswer: e.target.value })
+                    }
                     placeholder="Type your answer here..."
                     className="w-full h-40 p-3 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black bg-white"
-                    disabled={timerActive}
                   />
                 </div>
               )}
 
-              {selectedQuestion && !timerActive && userAnswer && (
+              {selectedQuestion && !timerActive && (
                 <div className="text-center">
                   <button
                     onClick={() => setShowSampleAnswer(!showSampleAnswer)}
@@ -195,7 +224,12 @@ export default function PracticePage() {
       </div>
 
       <div className="mt-6 p-4 rounded-xl bg-gray-50 shadow-md">
-        <CoreMessageBank userName="[Your Name]" />
+        <CoreMessageBank
+          coreMessages={coreMessages || []}
+          onMessagesChange={(messages) =>
+            setPracticeState({ coreMessages: messages })
+          }
+        />
       </div>
     </div>
   );

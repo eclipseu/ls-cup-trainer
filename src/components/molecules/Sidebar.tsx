@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   HiHome,
   HiChartBar,
@@ -13,20 +14,35 @@ import {
   HiUser,
   HiX,
   HiMenu,
+  HiLogout,
 } from "react-icons/hi";
+import { createClient } from "@/utils/supabase/client";
+import { type User } from "@supabase/supabase-js";
+import { logout } from "@/app/login/actions";
 
 interface NavItemProps {
   href: string;
   icon: React.ReactNode;
   label: string;
-  activeItem: string;
-  setActiveItem: (href: string) => void;
+  isActive: boolean;
   onClick: () => void;
 }
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeItem, setActiveItem] = useState("/");
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createClient();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+  }, [supabase.auth]);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -71,7 +87,9 @@ export default function Sidebar() {
             <HiUser size={20} />
           </div>
           <div>
-            <p className="font-semibold text-gray-800">Jay Oconer</p>
+            <p className="font-semibold text-gray-800 truncate">
+              {user ? user.email?.split("@")[0] : "Guest"}
+            </p>
           </div>
         </div>
 
@@ -81,82 +99,70 @@ export default function Sidebar() {
             href="/"
             icon={<HiHome size={20} />}
             label="Home"
-            activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            isActive={pathname === "/"}
             onClick={toggleSidebar}
           />
           <NavItem
             href="/dashboard"
             icon={<HiChartBar size={20} />}
             label="Dashboard"
-            activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            isActive={pathname === "/dashboard"}
             onClick={toggleSidebar}
           />
           <NavItem
             href="/practice"
             icon={<HiAcademicCap size={20} />}
             label="Practice"
-            activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            isActive={pathname === "/practice"}
             onClick={toggleSidebar}
           />
           <NavItem
             href="/advocacy"
             icon={<HiBookOpen size={20} />}
             label="Advocacy"
-            activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            isActive={pathname === "/advocacy"}
             onClick={toggleSidebar}
           />
           <NavItem
             href="/drills"
             icon={<HiFire size={20} />}
             label="Drills"
-            activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            isActive={pathname === "/drills"}
             onClick={toggleSidebar}
           />
           <NavItem
             href="/mock"
             icon={<HiMicrophone size={20} />}
             label="Mock Session"
-            activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            isActive={pathname === "/mock"}
             onClick={toggleSidebar}
           />
           <NavItem
             href="/admin"
             icon={<HiCog size={20} />}
             label="Admin"
-            activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            isActive={pathname === "/admin"}
             onClick={toggleSidebar}
           />
         </nav>
 
         {/* Footer */}
         <div className="pt-6 border-t border-green-100">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <span>Online</span>
-          </div>
+          <form action={logout}>
+            <button className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer text-gray-600 hover:bg-red-50 w-full">
+              <span className="text-red-500">
+                <HiLogout size={20} />
+              </span>
+              <span className="font-medium">Sign Out</span>
+            </button>
+          </form>
         </div>
       </aside>
     </>
   );
 }
 
-function NavItem({
-  href,
-  icon,
-  label,
-  activeItem,
-  setActiveItem,
-  onClick,
-}: NavItemProps) {
-  const isActive = activeItem === href;
-
+function NavItem({ href, icon, label, isActive, onClick }: NavItemProps) {
   return (
     <Link href={href} legacyBehavior>
       <a
@@ -164,12 +170,9 @@ function NavItem({
           ${
             isActive
               ? "bg-red-500 text-white shadow-lg"
-              : "text-gray-600 hover:bg-green-50 hover:text-white-600"
+              : "text-gray-600 hover:bg-green-50 hover:text-red-600"
           }`}
-        onClick={() => {
-          setActiveItem(href);
-          onClick();
-        }}
+        onClick={onClick}
       >
         <span className={`${isActive ? "text-white" : "text-red-500"}`}>
           {icon}

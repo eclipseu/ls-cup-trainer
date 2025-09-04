@@ -1,7 +1,7 @@
 "use client";
 
 import { HiAcademicCap, HiFire } from "react-icons/hi";
-import { useDashboardState } from "../../hooks/useDashboardState";
+import { useDashboardState } from "../dashboard/hooks/useDashboardState";
 import ProgressSection from "../dashboard/components/ProgressSection";
 import DailyTasks from "../dashboard/components/DailyTasks";
 import StatsAndActions from "../dashboard/components/StatsAndActions";

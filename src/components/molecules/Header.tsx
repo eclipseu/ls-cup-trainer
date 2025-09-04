@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { HiChip, HiCog, HiServer, HiSparkles } from "react-icons/hi";
+import { HiChip, HiCog, HiServer, HiSparkles, HiLogout } from "react-icons/hi";
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [showCircuit, setShowCircuit] = useState(false);
+  const [user, setUser] = useState(null); // Replace with actual user state
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +27,12 @@ export default function Header() {
       clearInterval(circuitInterval);
     };
   }, []);
+
+  const logout = () => {
+    setUser(null);
+  };
+
+  if (loading) return null; // Optionally, add a loading state
 
   return (
     <header
@@ -79,15 +87,14 @@ export default function Header() {
         </Link>
 
         {/* User profile/action */}
-        <div className="flex items-center space-x-4">
-          <button className="hidden sm:block px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white text-sm font-medium backdrop-blur-sm transition-all hover:scale-105 border border-white/10">
-            Login
-          </button>
-
-          <button className="px-4 py-2 rounded-md bg-gradient-to-r from-red-500 to-red-700 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center space-x-1 border border-red-400">
+        <div>
+          <Link
+            href="/dashboard"
+            className="px-4 py-2 rounded-md bg-gradient-to-r from-red-500 to-red-700 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center space-x-1 border border-red-400"
+          >
             <span>Start Training</span>
             <HiSparkles className="text-sm" />
-          </button>
+          </Link>
         </div>
       </div>
 

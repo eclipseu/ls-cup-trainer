@@ -1,43 +1,57 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-interface CoreMessageBankProps {
-  userName: string;
+interface CoreMessage {
+  id: number;
+  text: string;
 }
 
-export default function CoreMessageBank({ userName }: CoreMessageBankProps) {
+interface CoreMessageBankProps {
+  coreMessages: CoreMessage[];
+  onMessagesChange: (messages: CoreMessage[]) => void;
+}
+
+export default function CoreMessageBank({
+  coreMessages,
+  onMessagesChange,
+}: CoreMessageBankProps) {
   const [selectedMessage, setSelectedMessage] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [editedMessages, setEditedMessages] = useState<string[]>([]);
+  const [editedMessages, setEditedMessages] = useState<CoreMessage[]>([]);
 
-  // Initial messages with userName placeholder replaced
-  const initialMessages = [
-    `I am ${userName}, a Computer Science student at De La Salle Lipa who believes in service through innovation. With this title I will launch a digital literacy program that connects students with community needs.`,
-    `I am ${userName}, a problem-solver and servant leader. Combining my CS skills and Lasallian values, I aim to make technology accessible and useful to our neighbors.`,
-    `I am ${userName}, driven by faith, service, and communion. As Mr. La Sallian Cup, I will lead projects that teach digital skills, protect online safety, and bring our community together.`,
-  ];
-
-  const [messages, setMessages] = useState<string[]>(initialMessages);
+  useEffect(() => {
+    setEditedMessages(coreMessages);
+  }, [coreMessages]);
 
   const handleEditToggle = () => {
     if (isEditing) {
-      // Save changes when turning off edit mode
-      setMessages(editedMessages.length > 0 ? editedMessages : messages);
-    } else {
-      // Initialize edited messages when entering edit mode
-      setEditedMessages(messages);
+      onMessagesChange(editedMessages);
     }
     setIsEditing(!isEditing);
   };
 
-  const handleMessageChange = (index: number, value: string) => {
-    const newMessages = [...editedMessages];
-    newMessages[index] = value;
+  const handleMessageChange = (id: number, value: string) => {
+    const newMessages = editedMessages.map((msg) =>
+      msg.id === id ? { ...msg, text: value } : msg
+    );
     setEditedMessages(newMessages);
   };
 
   const handleReset = () => {
-    setMessages(initialMessages);
-    setEditedMessages(initialMessages);
+    const defaultMessages = [
+      {
+        id: 1,
+        text: "I am [name] a Computer Science student at De La Salle Lipa who believes in service through innovation. With this title I will launch a digital literacy program that connects students with community needs.",
+      },
+      {
+        id: 2,
+        text: "I am [name], a problem-solver and servant leader. Combining my CS skills and Lasallian values, I aim to make technology accessible and useful to our neighbors.",
+      },
+      {
+        id: 3,
+        text: "I am [name], driven by faith, service, and communion. As Mr. La Sallian Cup, I will lead projects that teach digital skills, protect online safety, and bring our community together.",
+      },
+    ];
+    onMessagesChange(defaultMessages);
     setSelectedMessage(null);
   };
 
@@ -68,23 +82,23 @@ export default function CoreMessageBank({ userName }: CoreMessageBankProps) {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {messages.map((message, index) => (
+        {editedMessages.map((message) => (
           <div
-            key={index}
+            key={message.id}
             className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-              selectedMessage === index
+              selectedMessage === message.id
                 ? "border-red-500 bg-red-50 shadow-md"
                 : "border-red-100 bg-white hover:bg-red-50"
             }`}
-            onClick={() => !isEditing && setSelectedMessage(index)}
+            onClick={() => !isEditing && setSelectedMessage(message.id)}
           >
             <div className="flex items-start mb-2">
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center mr-2 ${
-                  selectedMessage === index ? "bg-red-500" : "bg-gray-300"
+                  selectedMessage === message.id ? "bg-red-500" : "bg-gray-300"
                 }`}
               >
-                {selectedMessage === index && (
+                {selectedMessage === message.id && (
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"
@@ -100,56 +114,45 @@ export default function CoreMessageBank({ userName }: CoreMessageBankProps) {
                   </svg>
                 )}
               </div>
-              <span className="text-sm font-medium text-red-800">
-                Variation {index + 1}
+              <span
+                className={`font-semibold ${
+                  selectedMessage === message.id
+                    ? "text-red-700"
+                    : "text-gray-600"
+                }`}
+              >
+                Variation {message.id}
               </span>
             </div>
-
             {isEditing ? (
               <textarea
-                value={editedMessages[index]}
-                onChange={(e) => handleMessageChange(index, e.target.value)}
-                className="w-full h-40 p-2 text-sm border border-red-200 rounded 
-               focus:ring-2 focus:ring-red-500 text-black bg-white"
+                value={message.text}
+                onChange={(e) =>
+                  handleMessageChange(message.id, e.target.value)
+                }
+                className="w-full h-32 p-2 border border-red-200 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black bg-white"
               />
             ) : (
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {message}
+              <p
+                className={`text-gray-800 ${
+                  selectedMessage === message.id ? "font-medium" : ""
+                }`}
+              >
+                {message.text}
               </p>
             )}
           </div>
         ))}
       </div>
 
-      {selectedMessage !== null && (
-        <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-          <div className="flex items-center mb-2">
-            <svg
-              className="w-5 h-5 text-red-600 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <h3 className="text-lg font-medium text-red-800">
-              Memorize This Variation
-            </h3>
-          </div>
-          <p className="text-red-700 mb-3">
-            You&apos;ve selected Variation {selectedMessage + 1} to memorize.
-            Practice reciting it until it feels natural.
+      {selectedMessage !== null && !isEditing && (
+        <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200">
+          <h3 className="text-lg font-semibold text-red-800 mb-2">
+            Selected Message:
+          </h3>
+          <p className="text-red-900">
+            {editedMessages.find((m) => m.id === selectedMessage)?.text}
           </p>
-          <div className="bg-white p-3 rounded border border-red-100">
-            <p className="text-gray-800 whitespace-pre-wrap">
-              {messages[selectedMessage]}
-            </p>
-          </div>
         </div>
       )}
     </div>

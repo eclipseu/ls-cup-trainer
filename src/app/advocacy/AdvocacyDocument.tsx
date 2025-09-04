@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import EditableSection from "./EditableSection";
 import { HiDocumentDownload, HiPrinter, HiSave } from "react-icons/hi";
+import { useAdvocacyState } from "./hooks/useAdvocacyState";
 
 // Define the structure for the advocacy plan content
 interface AdvocacyContent {
@@ -22,29 +22,29 @@ interface AdvocacyContent {
 }
 
 export default function AdvocacyDocument() {
-  const [content, setContent] = useState<AdvocacyContent>({
-    title: "Your Advocacy Title",
-    advocateName: "Your Name / Group Name",
-    date: new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-    abstract: "",
-    introduction: "",
-    problemStatement: "",
-    generalObjective: "",
-    specificObjectives: "• \n• \n• ",
-    significance: "",
-    methodology: "",
-    expectedOutcomes: "",
-    conclusion: "",
-    references: "",
-  });
+  const { content, isLoading, error, handleContentChange } = useAdvocacyState();
 
-  const handleContentChange = (field: keyof AdvocacyContent, value: string) => {
-    setContent((prev) => ({ ...prev, [field]: value }));
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-2xl font-bold text-gray-500">
+          Loading Advocacy Plan...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-red-50">
+        <div className="text-2xl font-bold text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (!content) {
+    return null; // Or a fallback UI
+  }
 
   return (
     <>
