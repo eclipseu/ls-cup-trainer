@@ -41,6 +41,15 @@ export default function Sidebar() {
       setUser(user);
     };
     getUser();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, [supabase.auth]);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
@@ -50,7 +59,7 @@ export default function Sidebar() {
       {/* Mobile menu button */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-red-600 text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-lg bg-red-600 text-white shadow-lg mobile-gesture-zone btn-animated interactive"
       >
         {isOpen ? <HiX size={24} /> : <HiMenu size={24} />}
       </button>
@@ -67,8 +76,9 @@ export default function Sidebar() {
       <aside
         className={`
     fixed lg:static top-0 left-0 z-50 w-64 min-h-screen
-    bg-white p-6 flex flex-col border-r border-red-100 shadow-lg
-    transform transition-transform duration-300 ease-in-out
+    bg-white p-4 sm:p-6 flex flex-col border-r border-red-100 shadow-lg
+    transform transition-all duration-300 ease-in-out
+    mobile-safe-area
     ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
   `}
       >
@@ -166,19 +176,19 @@ function NavItem({ href, icon, label, isActive, onClick }: NavItemProps) {
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer
+      className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer mobile-gesture-zone interactive
         ${
           isActive
-            ? "bg-red-500 text-white shadow-lg"
-            : "text-gray-600 hover:bg-green-50 hover:text-red-600"
+            ? "bg-red-500 text-white shadow-lg transform scale-105"
+            : "text-gray-600 hover:bg-red-50 hover:text-red-600 hover:transform hover:scale-105"
         }`}
     >
-      <span className={`${isActive ? "text-white" : "text-red-500"}`}>
+      <span className={`${isActive ? "text-white" : "text-red-500"} transition-colors duration-200`}>
         {icon}
       </span>
-      <span className="font-medium">{label}</span>
+      <span className="font-medium transition-colors duration-200">{label}</span>
       {isActive && (
-        <div className="ml-auto w-2 h-2 rounded-full bg-white"></div>
+        <div className="ml-auto w-2 h-2 rounded-full bg-white animate-bounce"></div>
       )}
     </Link>
   );

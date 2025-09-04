@@ -117,7 +117,7 @@ export default function PracticePage() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           <QuestionBank
             categories={categories}
             selectedCategory={selectedCategory || null}
@@ -134,8 +134,8 @@ export default function PracticePage() {
             setShowSampleAnswer={setShowSampleAnswer}
           />
 
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-2xl shadow-lg p-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-8">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 card-hover animate-fadeInUp">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-red-800">
                   Practice Session

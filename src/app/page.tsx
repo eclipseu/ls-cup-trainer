@@ -18,6 +18,7 @@ import {
   HiAcademicCap as HiCap,
 } from "react-icons/hi";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
 // Array of 50+ Lasallian identity reminders
 const lasallianReminders = [
@@ -122,40 +123,56 @@ export default function HomePage() {
         {/* CTA Buttons */}
         <div className="mt-10 flex flex-col sm:flex-row gap-4">
           <Link href="/dashboard">
-            <Button
-              variant="primary"
-              className="flex items-center justify-center gap-2 px-6 py-4 text-lg"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Explore Dashboard{" "}
-              <span className="flex items-center justify-center">
-                <HiArrowRight />
-              </span>
-            </Button>
+              <Button
+                variant="primary"
+                className="flex items-center justify-center gap-2 px-6 py-4 text-lg"
+              >
+                Explore Dashboard{" "}
+                <span className="flex items-center justify-center">
+                  <HiArrowRight />
+                </span>
+              </Button>
+            </motion.div>
           </Link>
 
           <Link href="/practice">
-            <Button
-              variant="secondary"
-              className="flex items-center justify-center gap-2 px-6 py-4 text-lg"
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Start Practice{" "}
-              <span className="flex items-center justify-center">
-                <HiPlay />
-              </span>
-            </Button>
+              <Button
+                variant="secondary"
+                className="flex items-center justify-center gap-2 px-6 py-4 text-lg"
+              >
+                Start Practice{" "}
+                <span className="flex items-center justify-center">
+                  <HiPlay />
+                </span>
+              </Button>
+            </motion.div>
           </Link>
         </div>
 
         {/* Stats */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-2 gap-8 w-full max-w-3xl">
-          <div className="text-center">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="text-center"
+          >
             <div className="text-3xl font-bold text-red-600">100+</div>
             <div className="text-gray-600">Practice Questions</div>
-          </div>
-          <div className="text-center">
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="text-center"
+          >
             <div className="text-3xl font-bold text-red-600">6</div>
             <div className="text-gray-600">Week Program</div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -282,12 +299,23 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="p-6 rounded-xl border border-red-100 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 group hover:border-red-300">
-      <div className="mb-4 p-2 bg-red-50 rounded-lg w-fit group-hover:bg-red-100 transition-colors">
+    <motion.div
+      whileHover={{ 
+        y: -8, 
+        scale: 1.02,
+        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
+      }}
+      className="p-6 rounded-xl border border-red-100 bg-white shadow-sm hover:shadow-md transition-all duration-300 group hover:border-red-300"
+    >
+      <motion.div
+        whileHover={{ rotate: 360, scale: 1.1 }}
+        transition={{ duration: 0.6, type: "spring" }}
+        className="mb-4 p-2 bg-red-50 rounded-lg w-fit group-hover:bg-red-100 transition-colors"
+      >
         {icon}
-      </div>
+      </motion.div>
       <h3 className="text-xl font-semibold text-red-800 mb-2">{title}</h3>
       <p className="text-gray-600">{description}</p>
-    </div>
+    </motion.div>
   );
 }

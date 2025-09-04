@@ -10,6 +10,20 @@ export default function ProgressSection({ weeks }: ProgressSectionProps) {
     (weeks.filter((w) => w.completed).length / weeks.length) * 100
   );
 
+  const weekVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        type: "spring" as const,
+        stiffness: 200,
+      },
+    }),
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-red-100">
       <h2 className="text-xl font-semibold text-red-800 mb-4">

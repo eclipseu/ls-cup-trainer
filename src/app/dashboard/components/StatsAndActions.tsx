@@ -19,6 +19,19 @@ export default function StatsAndActions({
   stats,
   resetAllData,
 }: StatsAndActionsProps) {
+  const actionVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: "easeOut" as const,
+      },
+    }),
+  };
+
   return (
     <div>
       <div className="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-red-100">

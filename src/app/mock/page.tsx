@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { questionsData } from "../practice/questionsData";
 import { getMockDataClient } from "@/lib/data.client";
 import { usePracticeState } from "../practice/hooks/usePracticeState";
 import { Question } from "@/types";
+import { HiPlay, HiStop, HiCheck, HiX, HiClock, HiMicrophone, HiDownload, HiRefresh } from "react-icons/hi";
 
 type ChecklistKey = "clarity" | "structure" | "relevance" | "confidence";
 
@@ -38,6 +40,7 @@ export default function MockSessionPage() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const [recordings, setRecordings] = useState<Record<number, string>>({});
+  const [showQuestionSelector, setShowQuestionSelector] = useState<boolean>(false);
 
   const currentQuestion = useMemo(
     () => sessionQuestions[currentIndex] || null,
@@ -83,11 +86,9 @@ export default function MockSessionPage() {
     };
   }, [running, timeLeft, handleNext]);
 
-  // This effect is now just for potential future use, not setting state
   useEffect(() => {
     (async () => {
       await getMockDataClient();
-      // You can use the data for logging or other purposes
     })();
   }, []);
 
@@ -119,9 +120,8 @@ export default function MockSessionPage() {
     setRunning(true);
     setEvaluations({});
     setRecordings({});
+    setShowQuestionSelector(false);
   };
-
-  // kept for potential future UI; toggleChecklist is used instead
 
   const startRecording = async () => {
     if (!currentQuestion) return;
@@ -193,7 +193,6 @@ export default function MockSessionPage() {
     return `${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
-  // Revoke all blob URLs on unmount
   useEffect(() => {
     return () => {
       Object.values(recordings).forEach((url) => URL.revokeObjectURL(url));
@@ -203,266 +202,587 @@ export default function MockSessionPage() {
     };
   }, [recordings]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut" as const,
+      },
+    },
+  };
+
+  const questionCardVariants = {
+    hidden: { opacity: 0, x: -50, scale: 0.9 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: {
+        duration: 0.8,
+        type: "spring" as const,
+        stiffness: 100,
+        damping: 15,
+      },
+    },
+    exit: {
+      opacity: 0,
+      x: 50,
+      scale: 0.9,
+      transition: {
+        duration: 0.5,
+        ease: "easeIn" as const,
+      },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-red-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <header className="text-center mb-8">
-          <h1 className="pt-20 text-4xl font-bold text-red-800 mb-2">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-4xl mx-auto"
+      >
+        {/* Header */}
+        <motion.header
+          variants={itemVariants}
+          className="text-center mb-8"
+        >
+          <motion.h1
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="pt-20 text-4xl font-bold text-red-800 mb-2"
+          >
             Mock Session
-          </h1>
-          <p className="text-red-600">
-            Timed Q&amp;A practice with a 1-minute limit per question
-          </p>
-        </header>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            className="text-red-600 text-lg"
+          >
+            Timed Q&A practice with a 1-minute limit per question
+          </motion.p>
+        </motion.header>
 
         {/* Setup / Controls */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Questions per session
-              </label>
-              <select
-                value={questionCount}
-                onChange={(e) => setQuestionCount(Number(e.target.value))}
-                disabled={running}
-                className="border border-red-200 rounded-lg p-2 bg-white text-gray-800"
+        <motion.div
+          variants={itemVariants}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-red-100"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div className="space-y-4">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="space-y-2"
               >
-                <option value={3}>3</option>
-                <option value={4}>4</option>
-                <option value={5}>5</option>
-              </select>
+                <label className="block text-sm font-medium text-gray-700">
+                  Questions per session
+                </label>
+                <select
+                  value={questionCount}
+                  onChange={(e) => setQuestionCount(Number(e.target.value))}
+                  disabled={running}
+                  className="border-2 border-red-200 rounded-xl p-3 bg-white text-gray-800 focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all duration-200"
+                >
+                  <option value={3}>3 Questions</option>
+                  <option value={4}>4 Questions</option>
+                  <option value={5}>5 Questions</option>
+                </select>
+              </motion.div>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowQuestionSelector(!showQuestionSelector)}
+                disabled={running}
+                className="px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
+              >
+                <HiCheck className="w-4 h-4" />
+                {selectedIds.size > 0 ? `${selectedIds.size} Selected` : 'Select Questions'}
+              </motion.button>
             </div>
-            <div className="flex items-center gap-3">
+
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               {!running ? (
                 <button
                   onClick={startSession}
-                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+                  className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 text-lg font-semibold"
                 >
+                  <HiPlay className="w-5 h-5" />
                   Start Session
                 </button>
               ) : (
                 <button
                   onClick={stopSession}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+                  className="px-8 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 text-lg font-semibold"
                 >
+                  <HiStop className="w-5 h-5" />
                   End Session
                 </button>
               )}
-            </div>
+            </motion.div>
           </div>
-          {/* Select specific questions (includes your custom questions) */}
-          {!running && (
-            <div className="mt-6">
-              <h3 className="text-lg font-medium text-red-700 mb-2">
-                Select Questions (optional)
-              </h3>
-              <p className="text-sm text-gray-600 mb-3">
-                Selected questions will be used; otherwise we pick randomly.
-              </p>
-              <div className="max-h-64 overflow-auto space-y-2 border border-red-100 rounded-lg p-3 bg-red-50">
-                {allQuestions.map((q) => {
-                  const checked = selectedIds.has(q.id);
-                  return (
-                    <label
-                      key={q.id}
-                      className="flex items-center gap-2 bg-white rounded-md p-2 border border-red-100"
+
+          {/* Enhanced Question Selector */}
+          <AnimatePresence>
+            {showQuestionSelector && !running && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="mt-6 overflow-hidden"
+              >
+                <div className="border-t border-red-100 pt-6">
+                  <motion.h3
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-lg font-semibold text-red-700 mb-3 flex items-center gap-2"
+                  >
+                    <HiCheck className="w-5 h-5" />
+                    Select Specific Questions
+                  </motion.h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Choose questions for your session, or leave unselected for random selection.
+                  </p>
+                  
+                  <div className="max-h-80 overflow-auto space-y-3 border border-red-100 rounded-xl p-4 bg-red-50/50">
+                    {allQuestions.map((q, index) => {
+                      const checked = selectedIds.has(q.id);
+                      return (
+                        <motion.div
+                          key={q.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          whileHover={{ scale: 1.02, x: 5 }}
+                          onClick={() => {
+                            setSelectedIds((prev) => {
+                              const next = new Set(prev);
+                              if (checked) {
+                                next.delete(q.id);
+                              } else {
+                                next.add(q.id);
+                              }
+                              return next;
+                            });
+                          }}
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                            checked
+                              ? "border-red-500 bg-red-100 shadow-md"
+                              : "border-red-200 bg-white hover:border-red-300 hover:bg-red-50"
+                          }`}
+                        >
+                          <motion.div
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                              checked
+                                ? "border-red-500 bg-red-500"
+                                : "border-gray-300"
+                            }`}
+                          >
+                            {checked && (
+                              <motion.div
+                                initial={{ scale: 0, rotate: -180 }}
+                                animate={{ scale: 1, rotate: 0 }}
+                                transition={{ type: "spring", stiffness: 500 }}
+                              >
+                                <HiCheck className="w-3 h-3 text-white" />
+                              </motion.div>
+                            )}
+                          </motion.div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <span className={`text-sm font-medium ${
+                              checked ? "text-red-800" : "text-gray-800"
+                            }`}>
+                              {q.text}
+                            </span>
+                          </div>
+                          
+                          <motion.span
+                            whileHover={{ scale: 1.1 }}
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              checked
+                                ? "bg-red-200 text-red-800"
+                                : "bg-gray-200 text-gray-600"
+                            }`}
+                          >
+                            {q.category}
+                          </motion.span>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-sm text-gray-600">
+                      {selectedIds.size} of {allQuestions.length} questions selected
+                    </span>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedIds(new Set())}
+                      className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-1"
                     >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(e) => {
-                          setSelectedIds((prev) => {
-                            const next = new Set(prev);
-                            if (e.target.checked) next.add(q.id);
-                            else next.delete(q.id);
-                            return next;
-                          });
-                        }}
-                        className="accent-red-500"
-                      />
-                      <span className="text-gray-800">{q.text}</span>
-                      <span className="ml-auto text-xs text-red-700">
-                        {q.category}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+                      <HiRefresh className="w-3 h-3" />
+                      Clear All
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         {/* Active Question */}
-        {running && currentQuestion && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-semibold text-red-800">
-                Question {currentIndex + 1} of {sessionQuestions.length}
-              </h2>
-              <div
-                className={`text-xl font-mono font-bold ${
-                  timeLeft <= 10 ? "text-red-500" : "text-red-600"
-                }`}
-              >
-                {formatTime(timeLeft)}
+        <AnimatePresence mode="wait">
+          {running && currentQuestion && (
+            <motion.div
+              key={currentQuestion.id}
+              variants={questionCardVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8 border border-red-100"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <motion.h2
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-2xl font-semibold text-red-800"
+                >
+                  Question {currentIndex + 1} of {sessionQuestions.length}
+                </motion.h2>
+                
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.3, type: "spring" }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl font-mono font-bold text-xl ${
+                    timeLeft <= 10 
+                      ? "bg-red-100 text-red-600 border-2 border-red-300 animate-pulse"
+                      : "bg-red-50 text-red-600 border border-red-200"
+                  }`}
+                >
+                  <HiClock className="w-5 h-5" />
+                  {formatTime(timeLeft)}
+                </motion.div>
               </div>
-            </div>
-            <p className="text-gray-800 bg-red-50 p-4 rounded-lg border border-red-100 mb-6">
-              {currentQuestion.text}
-            </p>
 
-            {/* Recording controls */}
-            <div className="mb-6 flex items-center gap-3">
-              {!isRecording ? (
-                <button
-                  onClick={startRecording}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                >
-                  Start Recording
-                </button>
-              ) : (
-                <button
-                  onClick={stopRecording}
-                  className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600"
-                >
-                  Stop Recording
-                </button>
-              )}
-              {recordings[currentQuestion.id] && (
-                <div className="flex items-center gap-3">
-                  <audio
-                    controls
-                    src={recordings[currentQuestion.id]}
-                    className="h-10"
-                  />
-                  <a
-                    href={recordings[currentQuestion.id]}
-                    download={`answer-q${currentQuestion.id}.webm`}
-                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200"
-                  >
-                    Download
-                  </a>
-                </div>
-              )}
-            </div>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-gray-800 bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-xl border-2 border-red-100 mb-6 text-lg leading-relaxed"
+              >
+                {currentQuestion.text}
+              </motion.p>
 
-            {/* Evaluation checklist */}
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium text-red-700">Evaluation</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {(
-                  [
-                    "clarity",
-                    "structure",
-                    "relevance",
-                    "confidence",
-                  ] as ChecklistKey[]
-                ).map((k) => {
-                  const checked = Boolean(evaluations[currentQuestion.id]?.[k]);
-                  const label =
-                    k === "clarity"
-                      ? "Clarity (clear delivery)"
-                      : k === "structure"
-                      ? "Structure (intro, body, close)"
-                      : k === "relevance"
-                      ? "Relevance (answers the question)"
-                      : "Confidence (tone and pacing)";
-                  return (
-                    <label
-                      key={k}
-                      className="inline-flex items-center gap-2 p-2 rounded-lg border border-red-100 hover:bg-red-50 cursor-pointer"
+              {/* Enhanced Recording Controls */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mb-8"
+              >
+                <h3 className="text-lg font-semibold text-red-700 mb-4 flex items-center gap-2">
+                  <HiMicrophone className="w-5 h-5" />
+                  Recording Controls
+                </h3>
+                
+                <div className="flex flex-wrap items-center gap-4">
+                  {!isRecording ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={startRecording}
+                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
                     >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleChecklist(currentQuestion.id, k)}
-                        className="accent-red-500"
-                      />
-                      <span className="text-gray-700">{label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
+                      <HiPlay className="w-5 h-5" />
+                      Start Recording
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={stopRecording}
+                      className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:from-amber-600 hover:to-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 font-semibold"
+                    >
+                      <HiStop className="w-5 h-5" />
+                      Stop Recording
+                    </motion.button>
+                  )}
 
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleNext}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
-              >
-                {currentIndex + 1 < sessionQuestions.length ? "Next" : "Finish"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Summary */}
-        {!running && sessionQuestions.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-semibold text-red-800 mb-4">
-              Session Summary
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Checklist items met (out of {sessionQuestions.length} questions):
-            </p>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <li className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-900">
-                Clarity: {summary.clarity}
-              </li>
-              <li className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-900">
-                Structure: {summary.structure}
-              </li>
-              <li className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-900">
-                Relevance: {summary.relevance}
-              </li>
-              <li className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-900">
-                Confidence: {summary.confidence}
-              </li>
-            </ul>
-            {/* Recorded answers list */}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold text-red-800 mb-2">
-                Recorded Answers
-              </h3>
-              <div className="space-y-3">
-                {sessionQuestions.map((q, idx) => (
-                  <div
-                    key={q.id}
-                    className="p-3 rounded-lg border border-red-100 bg-red-50"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-red-700">
-                        Question {idx + 1}
-                      </span>
-                      {recordings[q.id] && (
-                        <a
-                          href={recordings[q.id]}
-                          download={`answer-q${q.id}.webm`}
-                          className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200"
-                        >
-                          Download
-                        </a>
-                      )}
-                    </div>
-                    {recordings[q.id] ? (
+                  {recordings[currentQuestion.id] && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ type: "spring" }}
+                      className="flex items-center gap-3"
+                    >
                       <audio
                         controls
-                        src={recordings[q.id]}
-                        className="w-full"
+                        src={recordings[currentQuestion.id]}
+                        className="h-12 rounded-lg"
                       />
-                    ) : (
-                      <span className="text-gray-500 text-sm">
-                        No recording
-                      </span>
-                    )}
-                  </div>
+                      <motion.a
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        href={recordings[currentQuestion.id]}
+                        download={`answer-q${currentQuestion.id}.webm`}
+                        className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2"
+                      >
+                        <HiDownload className="w-4 h-4" />
+                        Download
+                      </motion.a>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+
+              {/* Enhanced Evaluation Checklist */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="space-y-4"
+              >
+                <h3 className="text-lg font-semibold text-red-700 mb-4">Self-Evaluation Checklist</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(
+                    [
+                      "clarity",
+                      "structure",
+                      "relevance",
+                      "confidence",
+                    ] as ChecklistKey[]
+                  ).map((k, index) => {
+                    const checked = Boolean(evaluations[currentQuestion.id]?.[k]);
+                    const label =
+                      k === "clarity"
+                        ? "Clarity (clear delivery)"
+                        : k === "structure"
+                        ? "Structure (intro, body, close)"
+                        : k === "relevance"
+                        ? "Relevance (answers the question)"
+                        : "Confidence (tone and pacing)";
+                    return (
+                      <motion.label
+                        key={k}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.7 + index * 0.1 }}
+                        whileHover={{ scale: 1.02, x: 5 }}
+                        onClick={() => toggleChecklist(currentQuestion.id, k)}
+                        className={`inline-flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
+                          checked
+                            ? "border-green-500 bg-green-50 shadow-md"
+                            : "border-red-100 hover:border-red-300 hover:bg-red-50"
+                        }`}
+                      >
+                        <motion.div
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                            checked
+                              ? "border-green-500 bg-green-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {checked && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              transition={{ type: "spring", stiffness: 500 }}
+                            >
+                              <HiCheck className="w-4 h-4 text-white" />
+                            </motion.div>
+                          )}
+                        </motion.div>
+                        <span className={`font-medium ${
+                          checked ? "text-green-800" : "text-gray-700"
+                        }`}>
+                          {label}
+                        </span>
+                      </motion.label>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                className="mt-8 flex justify-end"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleNext}
+                  className="px-8 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 text-lg font-semibold"
+                >
+                  {currentIndex + 1 < sessionQuestions.length ? "Next Question" : "Finish Session"}
+                  <HiPlay className="w-5 h-5 rotate-90" />
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Enhanced Summary */}
+        <AnimatePresence>
+          {!running && sessionQuestions.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-red-100"
+            >
+              <motion.h2
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-2xl font-semibold text-red-800 mb-6"
+              >
+                Session Summary
+              </motion.h2>
+              
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-gray-600 mb-6"
+              >
+                Checklist items met (out of {sessionQuestions.length} questions):
+              </motion.p>
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8"
+              >
+                {[
+                  { key: "clarity", label: "Clarity", value: summary.clarity, color: "green" },
+                  { key: "structure", label: "Structure", value: summary.structure, color: "blue" },
+                  { key: "relevance", label: "Relevance", value: summary.relevance, color: "purple" },
+                  { key: "confidence", label: "Confidence", value: summary.confidence, color: "orange" },
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.key}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 + index * 0.1, type: "spring" }}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className={`p-4 rounded-xl border-2 text-center transition-all duration-200 ${
+                      item.color === "green" ? "border-green-200 bg-green-50" :
+                      item.color === "blue" ? "border-blue-200 bg-blue-50" :
+                      item.color === "purple" ? "border-purple-200 bg-purple-50" :
+                      "border-orange-200 bg-orange-50"
+                    }`}
+                  >
+                    <div className={`text-2xl font-bold mb-1 ${
+                      item.color === "green" ? "text-green-700" :
+                      item.color === "blue" ? "text-blue-700" :
+                      item.color === "purple" ? "text-purple-700" :
+                      "text-orange-700"
+                    }`}>
+                      {item.value}
+                    </div>
+                    <div className={`text-sm font-medium ${
+                      item.color === "green" ? "text-green-600" :
+                      item.color === "blue" ? "text-blue-600" :
+                      item.color === "purple" ? "text-purple-600" :
+                      "text-orange-600"
+                    }`}>
+                      {item.label}
+                    </div>
+                  </motion.div>
                 ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+              </motion.div>
+
+              {/* Recorded Answers */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="space-y-4"
+              >
+                <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center gap-2">
+                  <HiMicrophone className="w-5 h-5" />
+                  Recorded Answers
+                </h3>
+                <div className="space-y-3">
+                  {sessionQuestions.map((q, idx) => (
+                    <motion.div
+                      key={q.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.7 + idx * 0.1 }}
+                      whileHover={{ scale: 1.01, x: 5 }}
+                      className="p-4 rounded-xl border border-red-100 bg-red-50/50 transition-all duration-200"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-red-700">
+                          Question {idx + 1}
+                        </span>
+                        {recordings[q.id] && (
+                          <motion.a
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            href={recordings[q.id]}
+                            download={`answer-q${q.id}.webm`}
+                            className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-1"
+                          >
+                            <HiDownload className="w-3 h-3" />
+                            Download
+                          </motion.a>
+                        )}
+                      </div>
+                      {recordings[q.id] ? (
+                        <audio
+                          controls
+                          src={recordings[q.id]}
+                          className="w-full rounded-lg"
+                        />
+                      ) : (
+                        <span className="text-gray-500 text-sm flex items-center gap-2">
+                          <HiX className="w-4 h-4" />
+                          No recording
+                        </span>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 }

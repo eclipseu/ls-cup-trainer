@@ -56,7 +56,7 @@ export default function CoreMessageBank({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 mt-8">
+    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mt-8 card-hover animate-fadeInUp">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-red-800">
           Core Message Bank
@@ -64,13 +64,13 @@ export default function CoreMessageBank({
         <div className="flex space-x-2">
           <button
             onClick={handleEditToggle}
-            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium"
+            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium btn-animated interactive mobile-gesture-zone"
           >
             {isEditing ? "Save Changes" : "Edit Messages"}
           </button>
           <button
             onClick={handleReset}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium btn-animated interactive mobile-gesture-zone"
           >
             Reset
           </button>
@@ -82,14 +82,15 @@ export default function CoreMessageBank({
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {editedMessages.map((message) => (
+        {editedMessages.map((message, index) => (
           <div
             key={message.id}
-            className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+            className={`p-4 rounded-lg border-2 cursor-pointer transition-all card-hover interactive mobile-gesture-zone animate-fadeInUp ${
               selectedMessage === message.id
-                ? "border-red-500 bg-red-50 shadow-md"
-                : "border-red-100 bg-white hover:bg-red-50"
+                ? "border-red-500 bg-red-50 shadow-md transform scale-105"
+                : "border-red-100 bg-white hover:bg-red-50 hover:transform hover:scale-105"
             }`}
+            style={{ animationDelay: `${index * 0.1}s` }}
             onClick={() => !isEditing && setSelectedMessage(message.id)}
           >
             <div className="flex items-start mb-2">

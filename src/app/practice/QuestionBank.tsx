@@ -27,7 +27,7 @@ export default function QuestionBank({
   setShowSampleAnswer,
 }: QuestionBankProps) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
+    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 card-hover animate-slideInRight">
       <h2 className="text-2xl font-semibold text-red-800 mb-4">
         Question Bank
       </h2>
@@ -38,10 +38,10 @@ export default function QuestionBank({
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-3 py-1 rounded-full text-sm font-medium ${
+              className={`px-3 py-1 rounded-full text-sm font-medium mobile-gesture-zone interactive ${
                 selectedCategory === category
-                  ? "bg-red-500 text-white"
-                  : "bg-red-100 text-red-800 hover:bg-red-200"
+                  ? "bg-red-500 text-white transform scale-105"
+                  : "bg-red-100 text-red-800 hover:bg-red-200 hover:transform hover:scale-105"
               }`}
             >
               {category}
@@ -62,10 +62,10 @@ export default function QuestionBank({
                   setUserAnswer("");
                   setShowSampleAnswer(false);
                 }}
-                className={`p-3 rounded-lg cursor-pointer transition-all ${
+                className={`p-3 rounded-lg cursor-pointer transition-all mobile-gesture-zone interactive ${
                   selectedQuestion?.id === question.id
-                    ? "bg-red-100 border-l-4 border-red-500"
-                    : "bg-gray-50 hover:bg-red-50"
+                    ? "bg-red-100 border-l-4 border-red-500 transform scale-105"
+                    : "bg-gray-50 hover:bg-red-50 hover:transform hover:scale-105"
                 }`}
               >
                 <p className="text-sm text-gray-700">{question.text}</p>

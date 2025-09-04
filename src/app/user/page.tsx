@@ -4,29 +4,20 @@ import { useMemo, useState } from "react";
 import Head from "next/head";
 import { usePracticeState } from "../practice/hooks/usePracticeState";
 import type { Question } from "../practice/questionsData";
+import { categories as defaultQuestionCategories } from "../practice/questionsData";
 // Mock management removed from user page per request
 
 export default function UserContentPage() {
   const { customQuestions, setPracticeState } = usePracticeState();
   const [text, setText] = useState("");
-  const [category, setCategory] = useState("Personal");
+  const [category, setCategory] = useState("Personal Excellence & Character");
   const [editingQuestion, setEditingQuestion] = useState<number | null>(null);
   const [editingSampleAnswer, setEditingSampleAnswer] = useState("");
 
-  const defaultCategories = [
-    "Personal",
-    "Lasallian Values & School",
-    "Computer Science",
-    "Advocacy & Social Issues",
-    "Current Events & Opinion",
-    "Ethics & Situational",
-    "Curveballs & Redirections",
-    "Custom",
-  ];
-
   const categories = useMemo(() => {
     const set = new Set<string>([
-      ...defaultCategories,
+      ...defaultQuestionCategories,
+      "Custom",
       ...(customQuestions || []).map((q) => q.category),
     ]);
     return Array.from(set);
@@ -34,7 +25,7 @@ export default function UserContentPage() {
 
   const addQuestion = () => {
     const trimmed = text.trim();
-    const cat = category.trim() || "Personal";
+    const cat = category.trim() || "Personal Excellence & Character";
     if (!trimmed) return;
     const nextId = Date.now();
     const newQ: Question = {
@@ -42,6 +33,7 @@ export default function UserContentPage() {
       text: trimmed,
       category: cat,
       sampleAnswer: "",
+      timeLimit: "1 minute",
     };
     setPracticeState({ customQuestions: [...(customQuestions || []), newQ] });
     setText("");
@@ -85,7 +77,7 @@ export default function UserContentPage() {
           <p className="text-red-600">Manage custom practice questions</p>
         </header>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-8 card-hover animate-fadeInUp">
           <h2 className="text-xl font-semibold text-red-800 mb-4">
             Add Question
           </h2>
@@ -109,14 +101,14 @@ export default function UserContentPage() {
             </select>
             <button
               onClick={addQuestion}
-              className="sm:col-span-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              className="sm:col-span-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 btn-animated interactive mobile-gesture-zone"
             >
               Add
             </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 animate-slideInRight">
           <h2 className="text-xl font-semibold text-red-800 mb-4">
             Your Questions
           </h2>
@@ -127,7 +119,7 @@ export default function UserContentPage() {
               {(customQuestions || []).map((q) => (
                 <li
                   key={q.id}
-                  className="p-4 rounded-lg border border-red-100 bg-red-50"
+                  className="p-4 rounded-lg border border-red-100 bg-red-50 card-hover animate-fadeInUp"
                 >
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex-1">
@@ -136,7 +128,7 @@ export default function UserContentPage() {
                     </div>
                     <button
                       onClick={() => removeQuestion(q.id)}
-                      className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                      className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 interactive mobile-gesture-zone"
                     >
                       Remove
                     </button>
@@ -149,7 +141,7 @@ export default function UserContentPage() {
                       {editingQuestion !== q.id && (
                         <button
                           onClick={() => startEditingSampleAnswer(q)}
-                          className="px-2 py-1 text-xs bg-blue-100 text-red-700 rounded hover:bg-blue-200"
+                          className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 interactive mobile-gesture-zone"
                         >
                           {q.sampleAnswer ? "Edit" : "Add Sample Answer"}
                         </button>
@@ -157,23 +149,23 @@ export default function UserContentPage() {
                     </div>
                     
                     {editingQuestion === q.id ? (
-                      <div className="space-y-2 bg-blue-50 p-3 rounded-md border border-blue-200">
+                      <div className="space-y-2 bg-red-50 p-3 rounded-md border border-red-200">
                         <textarea
                           value={editingSampleAnswer}
                           onChange={(e) => setEditingSampleAnswer(e.target.value)}
                           placeholder="Enter a sample answer for this question..."
-                          className="w-full h-24 p-2 border border-blue-300 rounded-md text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-800"
+                          className="w-full h-24 p-2 border border-red-300 rounded-md text-sm resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-white text-gray-800"
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={() => saveSampleAnswer(q.id)}
-                            className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-green-600"
+                            className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 btn-animated interactive mobile-gesture-zone"
                           >
                             Save
                           </button>
                           <button
                             onClick={cancelEditing}
-                            className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                            className="px-3 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 interactive mobile-gesture-zone"
                           >
                             Cancel
                           </button>

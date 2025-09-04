@@ -48,6 +48,7 @@ export interface Question {
   text: string;
   category: string;
   sampleAnswer: string;
+  timeLimit: string;
 }
 
 export interface Task {
