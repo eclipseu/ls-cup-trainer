@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Head from "next/head";
 import { usePracticeState } from "../practice/hooks/usePracticeState";
 import type { Question } from "../practice/questionsData";

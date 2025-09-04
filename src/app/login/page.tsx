@@ -2,8 +2,9 @@
 
 import { login, signup } from "./actions";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function LoginPage() {
+function LoginInner() {
   const searchParams = useSearchParams();
   const message = searchParams.get("message");
   const isError =
@@ -94,5 +95,13 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginInner />
+    </Suspense>
   );
 }
