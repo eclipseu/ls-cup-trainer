@@ -164,24 +164,23 @@ export default function Sidebar() {
 
 function NavItem({ href, icon, label, isActive, onClick }: NavItemProps) {
   return (
-    <Link href={href} legacyBehavior>
-      <a
-        className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer
-          ${
-            isActive
-              ? "bg-red-500 text-white shadow-lg"
-              : "text-gray-600 hover:bg-green-50 hover:text-red-600"
-          }`}
-        onClick={onClick}
-      >
-        <span className={`${isActive ? "text-white" : "text-red-500"}`}>
-          {icon}
-        </span>
-        <span className="font-medium">{label}</span>
-        {isActive && (
-          <div className="ml-auto w-2 h-2 rounded-full bg-white"></div>
-        )}
-      </a>
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer
+        ${
+          isActive
+            ? "bg-red-500 text-white shadow-lg"
+            : "text-gray-600 hover:bg-green-50 hover:text-red-600"
+        }`}
+    >
+      <span className={`${isActive ? "text-white" : "text-red-500"}`}>
+        {icon}
+      </span>
+      <span className="font-medium">{label}</span>
+      {isActive && (
+        <div className="ml-auto w-2 h-2 rounded-full bg-white"></div>
+      )}
     </Link>
   );
 }

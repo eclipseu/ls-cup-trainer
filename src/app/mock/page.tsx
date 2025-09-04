@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Head from "next/head";
 import { questionsData, type Question } from "../practice/questionsData";
+import { getMockDataClient } from "@/lib/data.client";
+import { usePracticeState } from "../practice/hooks/usePracticeState";
 
 type ChecklistKey = "clarity" | "structure" | "relevance" | "confidence";
 
@@ -29,6 +31,9 @@ export default function MockSessionPage() {
   const [running, setRunning] = useState<boolean>(false);
   const [evaluations, setEvaluations] = useState<Evaluation>({});
   const timerRef = useRef<number | null>(null);
+  const [mockQuestions, setMockQuestions] = useState<Question[] | null>(null);
+  const { customQuestions } = usePracticeState();
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -52,9 +57,39 @@ export default function MockSessionPage() {
     };
   }, [running, timeLeft]);
 
+  // Load custom mock questions from Supabase
+  useEffect(() => {
+    (async () => {
+      const data = await getMockDataClient();
+      if (data && Array.isArray(data.mockQuestions)) {
+        setMockQuestions(data.mockQuestions as Question[]);
+      } else {
+        setMockQuestions([]);
+      }
+    })();
+  }, []);
+
   const startSession = () => {
     const count = Math.min(Math.max(questionCount, 3), 5);
-    const qs = pickRandomQuestions(questionsData, count);
+    // Build available questions: prefer mockQuestions if present; always include user's customQuestions
+    const base =
+      mockQuestions && mockQuestions.length > 0 ? mockQuestions : questionsData;
+    const mergedMap = new Map<number, Question>();
+    base.forEach((q) => mergedMap.set(q.id, q));
+    (customQuestions || []).forEach((q) => mergedMap.set(q.id, q));
+    const available = Array.from(mergedMap.values());
+
+    let qs: Question[];
+    if (selectedIds.size > 0) {
+      const chosen = available.filter((q) => selectedIds.has(q.id));
+      qs = chosen.slice(0, count);
+      if (qs.length < count) {
+        const remaining = available.filter((q) => !selectedIds.has(q.id));
+        qs = [...qs, ...pickRandomQuestions(remaining, count - qs.length)];
+      }
+    } else {
+      qs = pickRandomQuestions(available, count);
+    }
     setSessionQuestions(qs);
     setCurrentIndex(0);
     setTimeLeft(ONE_MINUTE);
@@ -228,6 +263,58 @@ export default function MockSessionPage() {
               )}
             </div>
           </div>
+          {/* Select specific questions (includes your custom questions) */}
+          {!running && (
+            <div className="mt-6">
+              <h3 className="text-lg font-medium text-red-700 mb-2">
+                Select Questions (optional)
+              </h3>
+              <p className="text-sm text-gray-600 mb-3">
+                Selected questions will be used; otherwise we pick randomly.
+              </p>
+              <div className="max-h-64 overflow-auto space-y-2 border border-red-100 rounded-lg p-3 bg-red-50">
+                {(() => {
+                  const base =
+                    mockQuestions && mockQuestions.length > 0
+                      ? mockQuestions
+                      : questionsData;
+                  const mergedMap = new Map<number, Question>();
+                  base.forEach((q) => mergedMap.set(q.id, q));
+                  (customQuestions || []).forEach((q) =>
+                    mergedMap.set(q.id, q)
+                  );
+                  const available = Array.from(mergedMap.values());
+                  return available.map((q) => {
+                    const checked = selectedIds.has(q.id);
+                    return (
+                      <label
+                        key={q.id}
+                        className="flex items-center gap-2 bg-white rounded-md p-2 border border-red-100"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            setSelectedIds((prev) => {
+                              const next = new Set(prev);
+                              if (e.target.checked) next.add(q.id);
+                              else next.delete(q.id);
+                              return next;
+                            });
+                          }}
+                          className="accent-red-500"
+                        />
+                        <span className="text-gray-800">{q.text}</span>
+                        <span className="ml-auto text-xs text-red-700">
+                          {q.category}
+                        </span>
+                      </label>
+                    );
+                  });
+                })()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Active Question */}

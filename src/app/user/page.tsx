@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Head from "next/head";
 import { usePracticeState } from "../practice/hooks/usePracticeState";
 import type { Question } from "../practice/questionsData";
+// Mock management removed from user page per request
 
 export default function UserContentPage() {
   const { customQuestions, setPracticeState } = usePracticeState();
