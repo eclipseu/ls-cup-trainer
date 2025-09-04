@@ -1,7 +1,7 @@
 "use client";
 
 import EditableSection from "./EditableSection";
-import { HiDocumentDownload, HiPrinter, HiSave } from "react-icons/hi";
+import { HiPrinter } from "react-icons/hi";
 import { useAdvocacyState } from "./hooks/useAdvocacyState";
 
 export default function AdvocacyDocument() {
@@ -36,16 +36,134 @@ export default function AdvocacyDocument() {
           Advocacy Plan Builder
         </h1>
         <div className="flex space-x-2">
-          <button className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
-            <HiSave className="mr-2" />
-            Save
-          </button>
-          <button className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors">
-            <HiDocumentDownload className="mr-2" />
-            Export
-          </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => {
+              const printWindow = window.open('', '_blank');
+              if (printWindow) {
+                printWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Advocacy Plan - ${content.title}</title>
+                      <style>
+                        @page {
+                          margin: 0.5in;
+                          @top-center { content: ""; }
+                          @bottom-center { content: ""; }
+                        }
+                        body { 
+                          font-family: 'Times New Roman', serif; 
+                          margin: 0; 
+                          padding: 0; 
+                          line-height: 1.6;
+                          color: #000;
+                        }
+                        .print-title { 
+                          text-align: center; 
+                          font-size: 2rem; 
+                          font-weight: bold; 
+                          margin-bottom: 2rem; 
+                        }
+                        .print-divider { 
+                          border-bottom: 2px solid #ccc; 
+                          width: 25%; 
+                          margin: 2rem auto; 
+                        }
+                        .print-name { 
+                          text-align: center; 
+                          font-size: 1.5rem; 
+                          margin-bottom: 1rem; 
+                        }
+                        .print-date { 
+                          text-align: center; 
+                          font-size: 1.2rem; 
+                          margin-bottom: 3rem; 
+                        }
+                        .print-section { 
+                          margin-bottom: 2rem; 
+                        }
+                        .print-section-title { 
+                          font-size: 1.5rem; 
+                          font-weight: bold; 
+                          border-bottom: 2px solid #ddd; 
+                          padding-bottom: 0.5rem; 
+                          margin-bottom: 1rem; 
+                        }
+                        .print-section-subtitle { 
+                          font-size: 1.2rem; 
+                          font-weight: 600; 
+                          margin-bottom: 0.8rem; 
+                        }
+                        .print-content { 
+                          font-size: 1rem; 
+                          line-height: 1.8; 
+                          white-space: pre-wrap; 
+                        }
+                        @media print {
+                          body { margin: 0; padding: 0; }
+                          .print-section { page-break-inside: avoid; }
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="print-title">${content.title}</div>
+                      <div class="print-divider"></div>
+                      <div class="print-name">${content.advocateName}</div>
+                      <div class="print-date">${content.date}</div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Abstract</div>
+                        <div class="print-content">${content.abstract}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Introduction</div>
+                        <div class="print-content">${content.introduction}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Statement of the Problem</div>
+                        <div class="print-content">${content.problemStatement}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Objectives of the Advocacy</div>
+                        <div class="print-section-subtitle">General Objective</div>
+                        <div class="print-content">${content.generalObjective}</div>
+                        <div class="print-section-subtitle">Specific Objectives</div>
+                        <div class="print-content">${content.specificObjectives}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Significance of the Advocacy</div>
+                        <div class="print-content">${content.significance}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Proposed Plan / Methodology</div>
+                        <div class="print-content">${content.methodology}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Expected Outcomes</div>
+                        <div class="print-content">${content.expectedOutcomes}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">Conclusion & Call to Action</div>
+                        <div class="print-content">${content.conclusion}</div>
+                      </div>
+                      
+                      <div class="print-section">
+                        <div class="print-section-title">References</div>
+                        <div class="print-content">${content.references}</div>
+                      </div>
+                    </body>
+                  </html>
+                `);
+                printWindow.document.close();
+                printWindow.print();
+              }
+            }}
             className="flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
           >
             <HiPrinter className="mr-2" />
@@ -55,6 +173,7 @@ export default function AdvocacyDocument() {
       </div>
 
       <div
+        id="advocacy-document"
         className="bg-white shadow-2xl rounded-lg p-8 sm:p-12 lg:p-16"
         style={{ fontFamily: "'Times New Roman', serif" }}
       >
