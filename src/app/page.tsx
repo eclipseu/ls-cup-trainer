@@ -110,7 +110,7 @@ export default function HomePage() {
         </div>
 
         <h1 className="text-5xl font-bold text-red-800 mb-6 leading-tight">
-          Master Your <span className="text-red-500">Advocacy</span> with
+          Master Your <span className="text-red-500">LASALLIAN CUP</span> with
           Confidence
         </h1>
 
@@ -194,7 +194,7 @@ export default function HomePage() {
             />
             <FeatureCard
               icon={<HiCog className="text-3xl text-red-500" />}
-              title="Admin Tools"
+              title="User Tools"
               description="Import content (Q&A banks, reviewers) and manage your data efficiently."
             />
           </div>

@@ -53,3 +53,54 @@ export async function updateProfileDataClient(data: {
 
   return { data: updatedProfile } as const;
 }
+
+// Practice data stored in a dedicated table: practice_data
+// Assumes table schema roughly: id (uuid, PK, references profiles.id), coreMessages jsonb, customQuestions jsonb
+export async function getPracticeDataClient() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await supabase
+    .from("practice_data")
+    .select("coreMessages, customQuestions")
+    .eq("id", user.id)
+    .single();
+
+  if (error) {
+    // If no row yet, return empty structure
+    if (error.code === "PGRST116" /* No rows */) return null;
+    console.error("Error fetching practice_data (client):", error);
+    return null;
+  }
+
+  return data as { coreMessages?: any; customQuestions?: any } | null;
+}
+
+export async function upsertPracticeDataClient(data: {
+  coreMessages?: any;
+  customQuestions?: any;
+}) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "User not authenticated" } as const;
+
+  const { data: saved, error } = await supabase
+    .from("practice_data")
+    .upsert({ id: user.id, ...data }, { onConflict: "id" })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error upserting practice_data (client):", error);
+    return { error: error.message } as const;
+  }
+
+  return { data: saved } as const;
+}

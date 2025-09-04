@@ -138,10 +138,10 @@ export default function Sidebar() {
             onClick={toggleSidebar}
           />
           <NavItem
-            href="/admin"
-            icon={<HiCog size={20} />}
-            label="Admin"
-            isActive={pathname === "/admin"}
+            href="/user"
+            icon={<HiUser size={20} />}
+            label="User"
+            isActive={pathname === "/user"}
             onClick={toggleSidebar}
           />
         </nav>

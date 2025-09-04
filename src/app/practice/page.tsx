@@ -1,12 +1,16 @@
 // PracticePage.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Head from "next/head";
 import CoreMessageBank from "./CoreMessageBank";
 import QuestionBank from "./QuestionBank";
 import FrameworkGuide from "./FrameworkGuide";
-import { questionsData, categories } from "./questionsData";
+import {
+  questionsData,
+  categories as builtInCategories,
+  Question,
+} from "./questionsData";
 import { usePracticeState } from "./hooks/usePracticeState";
 
 export default function PracticePage() {
@@ -15,6 +19,7 @@ export default function PracticePage() {
     selectedQuestion,
     userAnswer,
     coreMessages,
+    customQuestions,
     isLoading,
     error,
     setPracticeState,
@@ -25,9 +30,19 @@ export default function PracticePage() {
   const [showSampleAnswer, setShowSampleAnswer] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  const allQuestions: Question[] = useMemo(() => {
+    return [...questionsData, ...(customQuestions || [])];
+  }, [customQuestions]);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>(builtInCategories);
+    (customQuestions || []).forEach((q) => set.add(q.category));
+    return Array.from(set);
+  }, [customQuestions]);
+
   const categoryQuestions =
     selectedCategory && !isLoading
-      ? questionsData.filter((q) => q.category === selectedCategory)
+      ? allQuestions.filter((q) => q.category === selectedCategory)
       : [];
 
   useEffect(() => {
