@@ -26,24 +26,12 @@ export default function AdvocacyTabs({
   documentCount,
 }: AdvocacyTabsProps) {
   const documentList = Object.values(documents);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
-    null
-  );
   const [editingTitle, setEditingTitle] = useState<string | null>(null);
   const [tempTitle, setTempTitle] = useState<string>("");
 
   const handleDeleteClick = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowDeleteConfirm(id);
-  };
-
-  const handleDeleteConfirm = (id: string) => {
     onDeleteDocument(id);
-    setShowDeleteConfirm(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirm(null);
   };
 
   const handleTitleEdit = (doc: AdvocacyContent, e: React.MouseEvent) => {
@@ -72,20 +60,6 @@ export default function AdvocacyTabs({
       handleTitleCancel();
     }
   };
-
-  // Prevent body scrolling when modal is open
-  useEffect(() => {
-    if (showDeleteConfirm) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-
-    // Cleanup on unmount
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [showDeleteConfirm]);
 
   return (
     <>
@@ -141,10 +115,8 @@ export default function AdvocacyTabs({
                   }`}
                   onClick={(e) => {
                     // Only select document if not clicking on title or delete button
-                    if (
-                      !e.target.closest("h3") &&
-                      !e.target.closest("button")
-                    ) {
+                    const target = e.target as HTMLElement;
+                    if (!target.closest("h3") && !target.closest("button")) {
                       onSelectDocument(doc.id);
                     }
                   }}
@@ -192,35 +164,6 @@ export default function AdvocacyTabs({
           )}
         </div>
       </div>
-
-      {/* Delete Confirmation Dialog - Rendered outside main container */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg- bg-opacity-0 flex items-center justify-center z-[9999]">
-          <div className="bg-white rounded-lg shadow-2xl border border-gray-300 p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Delete Document
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this advocacy document? This
-              action cannot be undone.
-            </p>
-            <div className="flex space-x-3 justify-end">
-              <button
-                onClick={handleDeleteCancel}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteConfirm(showDeleteConfirm)}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
