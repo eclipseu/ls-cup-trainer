@@ -1,17 +1,34 @@
 "use client";
 
-import {
-  DashboardData,
-  AdvocacyContent,
-  PracticeState,
-  PracticeData,
-} from "@/types";
 import { createClient } from "@/utils/supabase/client";
+
+export interface DashboardData {
+  tasks?: unknown;
+  weeks?: unknown;
+  stats?: { timePracticed: number; questionsAnswered: number };
+  streak?: number;
+  lastStreakDate?: string | null;
+  lastTaskResetDate?: string | null;
+}
+
+export type AdvocacyData = Record<string, unknown>;
+
+export interface CustomQuestion {
+  id: number;
+  text: string;
+  category: string;
+  sampleAnswer: string;
+}
+
+export interface PracticeData {
+  coreMessages?: Array<{ id: number; text: string }>;
+  customQuestions?: CustomQuestion[];
+}
 
 export async function getProfileDataClient(): Promise<{
   id: string;
   dashboard_data?: DashboardData;
-  advocacy_data?: AdvocacyContent;
+  advocacy_data?: AdvocacyData;
   practice_data?: PracticeData;
 } | null> {
   const supabase = createClient();
@@ -34,12 +51,12 @@ export async function getProfileDataClient(): Promise<{
     return null;
   }
 
-  return profile;
+  return profile as any;
 }
 
 export async function updateProfileDataClient(data: {
   dashboard_data?: DashboardData;
-  advocacy_data?: AdvocacyContent;
+  advocacy_data?: AdvocacyData;
   practice_data?: PracticeData;
 }): Promise<{ data?: unknown; error?: string }> {
   const supabase = createClient();
@@ -67,7 +84,10 @@ export async function updateProfileDataClient(data: {
 
 // Practice data stored in a dedicated table: practice_data
 // Assumes table schema roughly: id (uuid, PK, references profiles.id), coreMessages jsonb, customQuestions jsonb
-export async function getPracticeDataClient(): Promise<PracticeData | null> {
+export async function getPracticeDataClient(): Promise<{
+  coreMessages?: PracticeData["coreMessages"];
+  customQuestions?: PracticeData["customQuestions"];
+} | null> {
   const supabase = createClient();
   const {
     data: { user },
@@ -77,22 +97,22 @@ export async function getPracticeDataClient(): Promise<PracticeData | null> {
 
   const { data, error } = await supabase
     .from("practice_data")
-    .select("*")
+    .select("coreMessages, customQuestions")
     .eq("id", user.id)
     .single();
 
   if (error) {
     // If no row yet, return empty structure
-    if (error.code === "PGRST116" /* No rows */) return null;
+    if ((error as any).code === "PGRST116" /* No rows */) return null;
     console.error("Error fetching practice_data (client):", error);
     return null;
   }
 
-  return data;
+  return data as any;
 }
 
 export async function upsertPracticeDataClient(
-  data: PracticeData,
+  data: PracticeData
 ): Promise<{ data?: unknown; error?: string }> {
   const supabase = createClient();
   const {
@@ -117,7 +137,7 @@ export async function upsertPracticeDataClient(
 
 // mock_data helpers
 export async function getMockDataClient(): Promise<{
-  mockQuestions?: PracticeState["customQuestions"];
+  mockQuestions?: CustomQuestion[];
 } | null> {
   const supabase = createClient();
   const {
@@ -132,15 +152,15 @@ export async function getMockDataClient(): Promise<{
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") return null;
+    if ((error as any).code === "PGRST116") return null;
     console.error("Error fetching mock_data (client):", error);
     return null;
   }
-  return data;
+  return data as any;
 }
 
 export async function upsertMockDataClient(data: {
-  mockQuestions?: PracticeState["customQuestions"];
+  mockQuestions?: CustomQuestion[];
 }): Promise<{ data?: unknown; error?: string }> {
   const supabase = createClient();
   const {

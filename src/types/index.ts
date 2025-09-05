@@ -12,11 +12,12 @@ export interface DashboardData {
   avatar_url?: string;
   website?: string;
   practice_data?: PracticeData;
-  advocacy_data?: AdvocacyContent;
+  advocacy_data?: AdvocacyDocuments;
   daily_tasks?: Task[];
 }
 
 export interface AdvocacyContent {
+  id: string;
   title: string;
   advocateName: string;
   date: string;
@@ -30,6 +31,12 @@ export interface AdvocacyContent {
   expectedOutcomes: string;
   conclusion: string;
   references: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdvocacyDocuments {
+  [id: string]: AdvocacyContent;
 }
 
 export interface PracticeData {

@@ -123,10 +123,7 @@ export default function HomePage() {
         {/* CTA Buttons */}
         <div className="mt-10 flex flex-col sm:flex-row gap-4">
           <Link href="/dashboard">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 variant="primary"
                 className="flex items-center justify-center gap-2 px-6 py-4 text-lg"
@@ -140,10 +137,7 @@ export default function HomePage() {
           </Link>
 
           <Link href="/practice">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 variant="secondary"
                 className="flex items-center justify-center gap-2 px-6 py-4 text-lg"
@@ -159,17 +153,11 @@ export default function HomePage() {
 
         {/* Stats */}
         <div className="mt-16 grid grid-cols-2 md:grid-cols-2 gap-8 w-full max-w-3xl">
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="text-center"
-          >
+          <motion.div whileHover={{ scale: 1.05 }} className="text-center">
             <div className="text-3xl font-bold text-red-600">100+</div>
             <div className="text-gray-600">Practice Questions</div>
           </motion.div>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            className="text-center"
-          >
+          <motion.div whileHover={{ scale: 1.05 }} className="text-center">
             <div className="text-3xl font-bold text-red-600">6</div>
             <div className="text-gray-600">Week Program</div>
           </motion.div>
@@ -300,10 +288,10 @@ function FeatureCard({
 }) {
   return (
     <motion.div
-      whileHover={{ 
-        y: -8, 
+      whileHover={{
+        y: -8,
         scale: 1.02,
-        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
+        boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
       }}
       className="p-6 rounded-xl border border-red-100 bg-white shadow-sm hover:shadow-md transition-all duration-300 group hover:border-red-300"
     >

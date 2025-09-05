@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Task, Week, DashboardData } from "@/types";
 import { defaultTasks, initialWeeks } from "../lib/data";
 import {
@@ -31,92 +31,90 @@ export function useDashboardState() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Debounced function to save data to Supabase
-  const debouncedSave = useMemo(
-    () =>
-      debounce(async (dataToSave: DashboardData) => {
-        await updateProfileData({ dashboard_data: dataToSave });
-      }, 1000),
+  const debouncedSave = useCallback(
+    debounce(async (dataToSave: DashboardData) => {
+      await updateProfileData({ dashboard_data: dataToSave });
+    }, 1000), // 1-second debounce delay
     []
   );
 
-  useEffect(() => {
-    (async () => {
+  const loadData = useCallback(async () => {
+    // 1) Load from localStorage first
+    if (typeof window !== "undefined") {
+      try {
+        const localTasks = window.localStorage.getItem("dashboard-tasks");
+        const localWeeks = window.localStorage.getItem("dashboard-weeks");
+        const localStats = window.localStorage.getItem("dashboard-stats");
+        const localStreak = window.localStorage.getItem("dashboard-streak");
+        const localLast = window.localStorage.getItem(
+          "dashboard-lastStreakDate"
+        );
+        const localReset = window.localStorage.getItem(
+          "dashboard-lastTaskResetDate"
+        );
+
+        if (localTasks) setTasks(JSON.parse(localTasks));
+        if (localWeeks) setWeeks(JSON.parse(localWeeks));
+        if (localStats) setStats(JSON.parse(localStats));
+        if (localStreak) setStreak(Number(localStreak));
+        if (localLast) setLastStreakDate(localLast);
+        if (localReset) setLastTaskResetDate(localReset);
+      } catch (_) {}
+    }
+
+    // 2) Load from server and hydrate + sync localStorage
+    const profile = await getProfileData();
+    if (profile && profile.dashboard_data) {
+      const { tasks, weeks, stats, streak, lastStreakDate, lastTaskResetDate } =
+        profile.dashboard_data;
+      setTasks((tasks as Task[]) || defaultTasks);
+      setWeeks((weeks as Week[]) || initialWeeks);
+      setStats(stats || { timePracticed: 0, questionsAnswered: 0 });
+      setStreak(streak || 0);
+      setLastStreakDate(lastStreakDate || null);
+      setLastTaskResetDate(lastTaskResetDate || null);
+
       if (typeof window !== "undefined") {
-        try {
-          const localTasks = window.localStorage.getItem("dashboard-tasks");
-          const localWeeks = window.localStorage.getItem("dashboard-weeks");
-          const localStats = window.localStorage.getItem("dashboard-stats");
-          const localStreak = window.localStorage.getItem("dashboard-streak");
-          const localLast = window.localStorage.getItem(
-            "dashboard-lastStreakDate"
+        window.localStorage.setItem("dashboard-tasks", JSON.stringify(tasks));
+        window.localStorage.setItem("dashboard-weeks", JSON.stringify(weeks));
+        window.localStorage.setItem("dashboard-stats", JSON.stringify(stats));
+        window.localStorage.setItem("dashboard-streak", String(streak || 0));
+        if (lastStreakDate !== null && lastStreakDate !== undefined) {
+          window.localStorage.setItem(
+            "dashboard-lastStreakDate",
+            lastStreakDate
           );
-          const localReset = window.localStorage.getItem(
-            "dashboard-lastTaskResetDate"
-          );
-
-          if (localTasks) setTasks(JSON.parse(localTasks));
-          if (localWeeks) setWeeks(JSON.parse(localWeeks));
-          if (localStats) setStats(JSON.parse(localStats));
-          if (localStreak) setStreak(Number(localStreak));
-          if (localLast) setLastStreakDate(localLast);
-          if (localReset) setLastTaskResetDate(localReset);
-        } catch {}
-      }
-
-      const profile = await getProfileData();
-      if (profile && profile.dashboard_data) {
-        const {
-          tasks,
-          weeks,
-          stats,
-          streak,
-          lastStreakDate,
-          lastTaskResetDate,
-        } = profile.dashboard_data;
-        setTasks(tasks || defaultTasks);
-        setWeeks(weeks || initialWeeks);
-        setStats(stats || { timePracticed: 0, questionsAnswered: 0 });
-        setStreak(streak || 0);
-        setLastStreakDate(lastStreakDate || null);
-        setLastTaskResetDate(lastTaskResetDate || null);
-
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem("dashboard-tasks", JSON.stringify(tasks));
-          window.localStorage.setItem("dashboard-weeks", JSON.stringify(weeks));
-          window.localStorage.setItem("dashboard-stats", JSON.stringify(stats));
-          window.localStorage.setItem("dashboard-streak", String(streak || 0));
-          if (lastStreakDate !== null && lastStreakDate !== undefined) {
-            window.localStorage.setItem(
-              "dashboard-lastStreakDate",
-              lastStreakDate
-            );
-          } else {
-            window.localStorage.removeItem("dashboard-lastStreakDate");
-          }
-          if (lastTaskResetDate !== null && lastTaskResetDate !== undefined) {
-            window.localStorage.setItem(
-              "dashboard-lastTaskResetDate",
-              lastTaskResetDate
-            );
-          } else {
-            window.localStorage.removeItem("dashboard-lastTaskResetDate");
-          }
+        } else {
+          window.localStorage.removeItem("dashboard-lastStreakDate");
         }
-      } else if (profile) {
-        const initialData = {
-          tasks: defaultTasks,
-          weeks: initialWeeks,
-          stats: { timePracticed: 0, questionsAnswered: 0 },
-          streak: 0,
-          lastStreakDate: null,
-          lastTaskResetDate: null,
-        };
-        await updateProfileData({ dashboard_data: initialData });
+        if (lastTaskResetDate !== null && lastTaskResetDate !== undefined) {
+          window.localStorage.setItem(
+            "dashboard-lastTaskResetDate",
+            lastTaskResetDate
+          );
+        } else {
+          window.localStorage.removeItem("dashboard-lastTaskResetDate");
+        }
       }
+    } else if (profile) {
+      // New user, save initial data
+      const initialData = {
+        tasks: defaultTasks,
+        weeks: initialWeeks,
+        stats: { timePracticed: 0, questionsAnswered: 0 },
+        streak: 0,
+        lastStreakDate: null,
+        lastTaskResetDate: null,
+      };
+      await updateProfileData({ dashboard_data: initialData });
+    }
 
-      setIsLoaded(true);
-    })();
+    setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const resetDailyTasks = useCallback(() => {
     setTasks((prev) => prev.map((t) => ({ ...t, completed: false })));

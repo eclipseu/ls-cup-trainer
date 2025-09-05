@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   getProfileDataClient as getProfileData,
   updateProfileDataClient as updateProfileData,
@@ -9,7 +9,7 @@ import {
   getPracticeDataClient as getPracticeData,
   upsertPracticeDataClient as upsertPracticeData,
 } from "@/lib/data.client";
-import { PracticeState, PracticeData } from "@/types";
+import { PracticeState, Question, PracticeData } from "@/types";
 import debounce from "lodash/debounce";
 
 const defaultPracticeState: PracticeState = {
@@ -30,21 +30,20 @@ export function usePracticeState() {
   const [error, setError] = useState<string | null>(null);
   const hasUserInteractedRef = useRef(false);
 
-  const debouncedUpdate = useMemo(
-    () =>
-      debounce(async (dataToSave: PracticeData) => {
-        // Save to dedicated practice_data table
-        const { error } = await upsertPracticeData(dataToSave);
-        if (error) {
-          console.error(
-            "Failed to save practice_data; falling back to profiles.practice_data:",
-            error
-          );
-          await updateProfileData({
-            practice_data: dataToSave,
-          });
-        }
-      }, 1000),
+  const debouncedUpdate = useCallback(
+    debounce(async (dataToSave: PracticeData) => {
+      // Save to dedicated practice_data table
+      const { error } = await upsertPracticeData(dataToSave);
+      if (error) {
+        console.error(
+          "Failed to save practice_data; falling back to profiles.practice_data:",
+          error
+        );
+        await updateProfileData({
+          practice_data: dataToSave,
+        });
+      }
+    }, 1000),
     []
   );
 
@@ -57,7 +56,7 @@ export function usePracticeState() {
         if (local) {
           try {
             setState(JSON.parse(local));
-          } catch {
+          } catch (_) {
             setState(defaultPracticeState);
           }
         } else {
@@ -174,7 +173,8 @@ export function usePracticeState() {
         Object.prototype.hasOwnProperty.call(newState, "coreMessages")
       ) {
         upsertPracticeData(dataToSave).then((res) => {
-          if (res?.error) {
+          if ((res as any)?.error) {
+            // Fallback to profiles.practice_data when practice_data upsert fails
             void updateProfileData({
               practice_data: dataToSave,
             });
