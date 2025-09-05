@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Task, Week, DashboardData } from "@/types";
 import { defaultTasks, initialWeeks } from "../lib/data";
 import {
@@ -59,7 +59,9 @@ export function useDashboardState() {
         if (localStreak) setStreak(Number(localStreak));
         if (localLast) setLastStreakDate(localLast);
         if (localReset) setLastTaskResetDate(localReset);
-      } catch (_) {}
+      } catch (error) {
+        console.warn("Failed to load local storage data:", error);
+      }
     }
 
     // 2) Load from server and hydrate + sync localStorage

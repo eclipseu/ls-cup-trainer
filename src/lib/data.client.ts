@@ -18,6 +18,7 @@ export interface CustomQuestion {
   text: string;
   category: string;
   sampleAnswer: string;
+  timeLimit: string;
 }
 
 export interface PracticeData {
@@ -51,7 +52,7 @@ export async function getProfileDataClient(): Promise<{
     return null;
   }
 
-  return profile as any;
+  return profile;
 }
 
 export async function updateProfileDataClient(data: {
@@ -103,12 +104,13 @@ export async function getPracticeDataClient(): Promise<{
 
   if (error) {
     // If no row yet, return empty structure
-    if ((error as any).code === "PGRST116" /* No rows */) return null;
+    if ((error as { code?: string }).code === "PGRST116" /* No rows */)
+      return null;
     console.error("Error fetching practice_data (client):", error);
     return null;
   }
 
-  return data as any;
+  return data;
 }
 
 export async function upsertPracticeDataClient(
@@ -152,11 +154,11 @@ export async function getMockDataClient(): Promise<{
     .single();
 
   if (error) {
-    if ((error as any).code === "PGRST116") return null;
+    if ((error as { code?: string }).code === "PGRST116") return null;
     console.error("Error fetching mock_data (client):", error);
     return null;
   }
-  return data as any;
+  return data;
 }
 
 export async function upsertMockDataClient(data: {

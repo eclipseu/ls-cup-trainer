@@ -9,7 +9,7 @@ import {
   getPracticeDataClient as getPracticeData,
   upsertPracticeDataClient as upsertPracticeData,
 } from "@/lib/data.client";
-import { PracticeState, Question, PracticeData } from "@/types";
+import { PracticeState, PracticeData } from "@/types";
 import debounce from "lodash/debounce";
 
 const defaultPracticeState: PracticeState = {
@@ -56,7 +56,7 @@ export function usePracticeState() {
         if (local) {
           try {
             setState(JSON.parse(local));
-          } catch (_) {
+          } catch {
             setState(defaultPracticeState);
           }
         } else {
@@ -173,7 +173,7 @@ export function usePracticeState() {
         Object.prototype.hasOwnProperty.call(newState, "coreMessages")
       ) {
         upsertPracticeData(dataToSave).then((res) => {
-          if ((res as any)?.error) {
+          if ((res as { error?: unknown })?.error) {
             // Fallback to profiles.practice_data when practice_data upsert fails
             void updateProfileData({
               practice_data: dataToSave,

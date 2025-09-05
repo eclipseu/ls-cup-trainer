@@ -61,7 +61,7 @@ export default function DailyRoutine() {
           ease: "easeInOut",
         }}
       />
-      
+
       <div className="relative z-10">
         <motion.h2
           initial={{ opacity: 0, y: -20 }}
@@ -71,17 +71,17 @@ export default function DailyRoutine() {
         >
           Suggested Daily Flow
         </motion.h2>
-        
+
         {/* Mobile layout - vertical stack */}
         <div className="block sm:hidden space-y-4">
-          {dailyRoutine.map((item, index) => (
+          {dailyRoutine.map((item) => (
             <motion.div
               key={item.name}
               variants={itemVariants}
-              whileHover={{ 
-                y: -5, 
+              whileHover={{
+                y: -5,
                 scale: 1.02,
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)"
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
               }}
               className="text-center p-4 bg-gray-50/80 backdrop-blur-sm rounded-xl border border-gray-200 cursor-pointer transition-all duration-300"
             >
@@ -102,10 +102,10 @@ export default function DailyRoutine() {
             <div key={item.name} className="flex items-center">
               <motion.div
                 variants={itemVariants}
-                whileHover={{ 
-                  y: -5, 
+                whileHover={{
+                  y: -5,
                   scale: 1.02,
-                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)"
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
                 }}
                 className="text-center p-4 bg-gray-50/80 backdrop-blur-sm rounded-xl border border-gray-200 cursor-pointer transition-all duration-300 min-w-[140px]"
               >
@@ -117,13 +117,10 @@ export default function DailyRoutine() {
                 </div>
                 <div className="text-xs text-gray-500">{item.details}</div>
               </motion.div>
-              
+
               {/* Arrow between items */}
               {index < dailyRoutine.length - 1 && (
-                <motion.div
-                  variants={arrowVariants}
-                  className="mx-4"
-                >
+                <motion.div variants={arrowVariants} className="mx-4">
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{

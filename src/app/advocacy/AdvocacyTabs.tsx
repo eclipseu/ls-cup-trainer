@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { HiPlus, HiX } from "react-icons/hi";
 import { AdvocacyContent } from "@/types";
 
