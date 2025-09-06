@@ -9,7 +9,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body className="flex flex-col min-h-screen mobile-tap-highlight">
         {/* Desktop Header - Hidden on mobile */}
-        <div className="hidden md:block">
+        <div className="fixed top-0 left-0 right-0 z-30">
           <Header />
         </div>
 
