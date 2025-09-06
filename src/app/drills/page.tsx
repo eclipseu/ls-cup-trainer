@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { drillsData, Drill } from "./drillsData";
 import DrillCard from "./DrillCard";
 import DrillTimer from "./DrillTimer";
@@ -10,10 +10,41 @@ import { HiOutlineSparkles } from "react-icons/hi";
 export default function DrillsPage() {
   const [selectedDrill, setSelectedDrill] = useState<Drill | null>(null);
   const [completedDrills, setCompletedDrills] = useState<string[]>([]);
+  const timerRef = useRef<HTMLDivElement | null>(null);
 
   const handleStartDrill = (drill: Drill) => {
     setSelectedDrill(drill);
   };
+
+  useEffect(() => {
+    if (selectedDrill && timerRef.current) {
+      // Step 1: scroll to top first
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Step 2: after a short delay, do the halfway scroll
+      const timeout = setTimeout(() => {
+        const element = timerRef.current;
+        if (!element) return;
+
+        const rect = element.getBoundingClientRect();
+        const absoluteElementTop = rect.top + window.pageYOffset;
+        const offset = 80; // header height or desired offset
+
+        const centerTarget =
+          absoluteElementTop -
+          window.innerHeight / 2 +
+          rect.height / 2 -
+          offset;
+
+        const currentScroll = window.pageYOffset;
+        const halfWay = currentScroll + (centerTarget - currentScroll) * 0.45;
+
+        window.scrollTo({ top: halfWay, behavior: "smooth" });
+      }, 500); // adjust delay if needed
+
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedDrill]);
 
   const handleTimerComplete = () => {
     if (selectedDrill) {
@@ -71,13 +102,15 @@ export default function DrillsPage() {
       </div>
 
       {selectedDrill && (
-        <DrillTimer
-          title={selectedDrill.title}
-          durationInMinutes={selectedDrill.duration}
-          examples={selectedDrill.examples}
-          onComplete={handleTimerComplete}
-          onClose={() => setSelectedDrill(null)}
-        />
+        <div ref={timerRef}>
+          <DrillTimer
+            title={selectedDrill.title}
+            durationInMinutes={selectedDrill.duration}
+            examples={selectedDrill.examples}
+            onComplete={handleTimerComplete}
+            onClose={() => setSelectedDrill(null)}
+          />
+        </div>
       )}
     </div>
   );

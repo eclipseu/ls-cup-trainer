@@ -75,7 +75,7 @@ export default function Sidebar() {
       {/* Sidebar */}
       <aside
         className={`
-    fixed lg:static top-0 left-0 z-50 w-64 min-h-screen
+    fixed lg:static top-0 left-0 z-40 w-64 min-h-screen
     bg-white p-4 sm:p-6 flex flex-col border-r border-red-100 shadow-lg
     transform transition-all duration-300 ease-in-out
     mobile-safe-area
@@ -156,9 +156,9 @@ export default function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="pt-6 border-t border-green-100">
+        <div className="pt-5 border-t border-green-100">
           <form action={logout}>
-            <button className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer text-gray-600 hover:bg-red-50 w-full">
+            <button className="flex items-center gap-3 p-15 rounded-xl transition-all duration-200 cursor-pointer text-gray-600 hover:bg-red-50 w-full">
               <span className="text-red-500">
                 <HiLogout size={20} />
               </span>
@@ -183,10 +183,16 @@ function NavItem({ href, icon, label, isActive, onClick }: NavItemProps) {
             : "text-gray-600 hover:bg-red-50 hover:text-red-600 hover:transform hover:scale-105"
         }`}
     >
-      <span className={`${isActive ? "text-white" : "text-red-500"} transition-colors duration-200`}>
+      <span
+        className={`${
+          isActive ? "text-white" : "text-red-500"
+        } transition-colors duration-200`}
+      >
         {icon}
       </span>
-      <span className="font-medium transition-colors duration-200">{label}</span>
+      <span className="font-medium transition-colors duration-200">
+        {label}
+      </span>
       {isActive && (
         <div className="ml-auto w-2 h-2 rounded-full bg-white animate-bounce"></div>
       )}

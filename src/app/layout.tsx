@@ -16,9 +16,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* Mobile Navigation */}
         <MobileNav />
 
-        <div className="flex flex-1">
+        <div className="flex flex-1 pt-20">
           {/* Desktop Sidebar - Hidden on mobile */}
-          <div className="hidden md:block">
+          <div className="hidden md:flex md:flex-col md:h-[calc(100vh-5rem)] md:sticky md:top-20">
             <Sidebar />
           </div>
 
